@@ -1,6 +1,7 @@
 import re
 import furst_instrument_paper
 from ._export_figures import figures_latex
+from ._tables import design_parameters
 
 __all__ = [
     "section",
@@ -25,7 +26,8 @@ The performance of the optical design was evaluated by tracing rays through
 an idealized model of the instrument built with the open-source
 \href{https://optika.readthedocs.io}{\texttt{optika}} raytracing package
 \citep{optika}.
-The model is shown in Figure~\ref{fig:layout}.
+The model is shown in Figure~\ref{fig:layout} and its parameters are
+listed in Table~\ref{tab:designParameters}.
 It places the \NumChannelsWords\ feed optics, the grating, and the detector
 at their design positions on the Rowland circle.
 The grating has a radius of curvature of \GratingRadius\ and a ruling density
@@ -86,7 +88,7 @@ def section() -> str:
     the manuscript with ``\\input``.
 
     The file defines a macro for every number it cites, then gives the text
-    of the section, then the figures it refers to.
+    of the section, then the table and the figures it refers to.
     """
     variables = [v.dumps() for v in furst_instrument_paper.variables()]
 
@@ -96,6 +98,8 @@ def section() -> str:
         "\n".join(variables),
         "",
         _prose().strip("\n"),
+        "",
+        design_parameters(),
         "",
         figures_latex(),
     ]

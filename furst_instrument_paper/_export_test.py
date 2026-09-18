@@ -47,6 +47,7 @@ def test_export(tmp_path: pathlib.Path):
     assert r"\subsection{Optical Performance}" in latex
     assert r"\newcommand{\ResolvingPowerMin}" in latex
     assert "figures/layout.pdf" in latex
+    assert r"\label{tab:designParameters}" in latex
     assert r"\label{fig:layout}" in latex
     assert r"\label{fig:lsf}" in latex
     assert r"\label{fig:resolvingPower}" in latex
