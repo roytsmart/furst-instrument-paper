@@ -14,9 +14,10 @@ that they stay in sync with it.
 `furst_instrument_paper.export(directory)` writes, into a clone of the Overleaf
 project,
 
-- `figures/<name>.pdf` and `figures/<name>.tex` for every figure, the latter a
-  complete `figure` environment with caption and label, and
-- `variables.tex`, one `\newcommand` per number the prose cites.
+- `033_instrument_performance.tex`, subsection 3.3 *Optical Performance* as one
+  file: a `\newcommand` for every number it cites, the prose, and the `figure`
+  environments, so the manuscript includes it with a single `\input`, and
+- `figures/<name>.pdf`, the image of each figure.
 
 This is one package within the larger Kankelborg-Group workspace (see the
 parent `../CLAUDE.md`). Use `named_arrays` (`import named_arrays as na`) rather
@@ -45,9 +46,13 @@ python -c "import furst_instrument_paper; furst_instrument_paper.export('path/to
   `aastex.column_width_inches` or `aastex.text_width_inches` and styled with
   `_style.rc`.
 - `_variables.py`: the `aastex.Variable` list. Add a variable rather than
-  typing a number into the manuscript.
-- `_export.py`: writes the files above.
+  typing a number into the prose.
+- `_section.py`: the prose of the section, citing only those variables, and
+  the assembly of the exported file.
+- `_export_figures.py` and `_export.py`: write the files above.
 
-Each figure and variable has a test, and `_performance_test.py` asserts the
-resolving power requirement is met everywhere, so a model change that breaks
-the paper's claims fails CI.
+Each figure and variable has a test, `_section_test.py` checks that the prose
+cites no undefined macro, `_export_test.py` compiles the section in a stand-in
+emulateapj manuscript when LaTeX is available, and `_performance_test.py`
+asserts the resolving power requirement is met everywhere, so a model change
+that breaks the paper's claims fails CI.

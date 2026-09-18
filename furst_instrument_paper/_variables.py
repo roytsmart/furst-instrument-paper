@@ -1,9 +1,10 @@
 import numpy as np
 import astropy.units as u
+import num2words
 import aastex
 import named_arrays as na
 import furst_instrument_paper
-from ._instrument import axis_channel, axis_wavelength
+from ._instrument import axis_channel, axis_wavelength, num_field, num_pupil
 
 __all__ = [
     "variables",
@@ -63,6 +64,7 @@ def variables() -> list[aastex.Variable]:
 
     return [
         aastex.Variable("NumChannels", num_channel),
+        aastex.Variable("NumChannelsWords", num2words.num2words(num_channel)),
         aastex.Variable("WavelengthMin", wavelength_min.min().ndarray.round(1)),
         aastex.Variable("WavelengthMax", wavelength_max.max().ndarray.round(1)),
         aastex.Variable(
@@ -92,27 +94,47 @@ def variables() -> list[aastex.Variable]:
             .to(u.pm)
             .round(2),
         ),
+        # the widths are cited in pixels by the prose, so they are written
+        # as plain numbers with two decimals
         aastex.Variable(
             "LsfWidthMin",
-            performance.width.min().ndarray.round(2),
+            _decimals(performance.width.min(), u.pix),
         ),
         aastex.Variable(
             "LsfWidthMax",
-            performance.width.max().ndarray.round(2),
+            _decimals(performance.width.max(), u.pix),
         ),
         aastex.Variable(
             "ResolvingPowerMin",
-            int(np.round(performance.resolving_power.min().ndarray, -2)),
+            _hundreds(performance.resolving_power.min()),
         ),
         aastex.Variable(
             "ResolvingPowerMean",
-            int(np.round(performance.resolving_power.mean().ndarray, -2)),
+            _hundreds(performance.resolving_power.mean()),
         ),
         aastex.Variable(
             "ResolvingPowerMax",
-            int(np.round(performance.resolving_power.max().ndarray, -2)),
+            _hundreds(performance.resolving_power.max()),
         ),
         aastex.Variable(
             "NumWavelengthTraced", performance.wavelength.shape[axis_wavelength]
         ),
+        aastex.Variable("NumFieldSamples", _grid(num_field)),
+        aastex.Variable("NumPupilSamples", _grid(num_pupil)),
     ]
+
+
+def _decimals(value: na.AbstractScalar, unit: u.UnitBase, num: int = 2) -> str:
+    """A quantity as a plain number in the given unit, to `num` decimals."""
+    return f"{na.as_named_array(value).ndarray.to_value(unit):.{num}f}"
+
+
+def _hundreds(value: na.AbstractScalar) -> str:
+    """A large dimensionless number rounded to the hundreds, thousands separated."""
+    result = int(np.round(na.as_named_array(value).ndarray.to_value(u.one), -2))
+    return f"{result:,}"
+
+
+def _grid(num: int) -> str:
+    """A square grid of samples, written as its side lengths."""
+    return aastex.NoEscape(rf"${num} \times {num}$")

@@ -7,6 +7,7 @@ from . import figures
 from ._instrument import instrument
 from ._performance import Performance, performance
 from ._variables import variables
+from ._section import section
 from ._export import export
 
 __all__ = [
@@ -15,5 +16,6 @@ __all__ = [
     "Performance",
     "performance",
     "variables",
+    "section",
     "export",
 ]

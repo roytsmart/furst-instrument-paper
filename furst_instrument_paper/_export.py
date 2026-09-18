@@ -1,43 +1,31 @@
 import pathlib
-import aastex
 import furst_instrument_paper
+from ._export_figures import save_figures
 
 __all__ = [
+    "filename_section",
     "export",
 ]
 
-directory_figures = "figures"
-"""The directory, inside the manuscript, that the figures are written to."""
+filename_section = "033_instrument_performance.tex"
+"""
+The file, inside the manuscript, that the section is written to.
 
-filename_variables = "variables.tex"
-"""The file, inside the manuscript, that the variables are written to."""
-
-
-def _figures() -> list[aastex.Figure]:
-    """Every figure of the article, built from the model."""
-    return [
-        furst_instrument_paper.figures.layout(),
-        furst_instrument_paper.figures.resolving_power(),
-    ]
-
-
-def _stem(figure: aastex.Figure) -> str:
-    """The name a figure's files are saved under, taken from its label."""
-    label = figure.label
-    if isinstance(label, str):
-        return label.split(":", 1)[-1]
-    return label.marker.name
+Named for its place in the manuscript, subsection 3.3, so that it sorts
+beside the collaborator's own section files.
+"""
 
 
 def export(directory: str | pathlib.Path) -> list[pathlib.Path]:
     """
-    Write every figure and variable into a copy of the manuscript.
+    Write the optical performance section and its figures into a copy of
+    the manuscript.
 
-    Each figure becomes a PDF and a ``.tex`` file holding its ``figure``
-    environment, both in the figures directory, and the variables become one
-    file of ``\\newcommand`` definitions at the top level.
-    The ``.tex`` files reference their images relative to the main file of
-    the manuscript, so the manuscript can ``\\input`` them as they are.
+    The section is one ``.tex`` file which defines its macros, gives its
+    text, and places its figures, so the manuscript includes it with a single
+    ``\\input``. The images of the figures are written beside it, in the
+    figures directory, and are referenced relative to the main file of the
+    manuscript.
 
     Parameters
     ----------
@@ -49,28 +37,12 @@ def export(directory: str | pathlib.Path) -> list[pathlib.Path]:
     The files that were written.
     """
     directory = pathlib.Path(directory)
-    directory_figure = directory / directory_figures
-    directory_figure.mkdir(parents=True, exist_ok=True)
+    directory.mkdir(parents=True, exist_ok=True)
 
-    written = []
+    written = save_figures(directory)
 
-    for figure in _figures():
-        latex = figure.dumps()
-        for image in figure.images:
-            path = directory_figure / image.name
-            image.figure.savefig(path, *image.args, **image.kwargs)
-            written.append(path)
-            latex = latex.replace(
-                f"{{{image.name}}}",
-                f"{{{directory_figures}/{image.name}}}",
-            )
-        path = directory_figure / f"{_stem(figure)}.tex"
-        path.write_text(latex + "\n", encoding="utf-8")
-        written.append(path)
-
-    path = directory / filename_variables
-    lines = [variable.dumps() for variable in furst_instrument_paper.variables()]
-    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    path = directory / filename_section
+    path.write_text(furst_instrument_paper.section(), encoding="utf-8")
     written.append(path)
 
     return written
