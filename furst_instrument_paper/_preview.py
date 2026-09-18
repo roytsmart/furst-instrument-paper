@@ -37,7 +37,10 @@ the sections of the manuscript which precede it.
 \subsection{Optical Layout}
 \input{033_instrument_performance.tex}
 
-\bibliographystyle{aasjournalv7}
+% The manuscript chooses its own bibliography style. This one is only so
+% that the preview has references at all, and is chosen because it ships
+% with every LaTeX installation, unlike the journal's.
+\bibliographystyle{plainnat}
 \bibliography{033_instrument_performance}
 
 \end{document}
@@ -50,7 +53,7 @@ the exported section the way the corresponding author will.
 _programs = ("pdflatex", "bibtex", "kpsewhich")
 """The programs needed to compile the preview."""
 
-_files = ("emulateapj.cls", "aasjournalv7.bst")
+_files = ("emulateapj.cls", "plainnat.bst")
 """The LaTeX files needed to compile the preview."""
 
 
@@ -58,8 +61,8 @@ def has_latex() -> bool:
     """
     Whether this machine can compile the preview.
 
-    The document is built with the class and bibliography style of the
-    journal, which a plain LaTeX installation does not carry.
+    The document is built with the class the draft of the manuscript uses,
+    which a plain LaTeX installation does not carry.
     """
     for program in _programs:
         if shutil.which(program) is None:

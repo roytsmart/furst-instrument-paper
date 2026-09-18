@@ -26,15 +26,16 @@ jobs:
       contents: write
     steps:
       - name: Install LaTeX and the cairo library
-        # `texlive-publishers` carries the journal's class and bibliography
-        # style, and optika's rlPyCairo dependency needs the cairo headers.
+        # `texlive-publishers` carries the class the draft uses, and optika's
+        # rlPyCairo dependency needs the cairo headers.
         # `apt-get` waits forever if another process holds the dpkg lock, so
         # bound that wait and refresh the runner's stale index first.
         run: >-
           sudo apt-get update -o DPkg::Lock::Timeout=300 &&
           sudo apt-get install -y -o DPkg::Lock::Timeout=300
           texlive-publishers texlive-science texlive-fonts-recommended
-          texlive-latex-extra cm-super libcairo2-dev
+          texlive-latex-recommended texlive-latex-extra cm-super
+          libcairo2-dev
 
       - uses: actions/checkout@v4
         with:
