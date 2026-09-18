@@ -84,7 +84,9 @@ def performance() -> Performance:
     index_first = {axis_wavelength: 0}
     index_last = {axis_wavelength: ~0}
     dispersion = wavelength[index_last] - wavelength[index_first]
-    dispersion = dispersion / (position_mean.x[index_last] - position_mean.x[index_first])
+    dispersion = dispersion / (
+        position_mean.x[index_last] - position_mean.x[index_first]
+    )
     dispersion = dispersion.to(u.nm / u.mm)
 
     wavelength_resolvable = 2 * width * (width_pixel / u.pix) * dispersion

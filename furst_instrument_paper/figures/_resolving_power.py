@@ -1,5 +1,4 @@
 import matplotlib.pyplot as plt
-import astropy.units as u
 import astropy.visualization
 import aastex
 import named_arrays as na
@@ -62,22 +61,17 @@ def resolving_power() -> aastex.Figure:
         )
 
     result = aastex.Figure("fig:resolvingPower", position="!ht")
-    result.append(aastex.NoEscape(r"\centering"))
     result.add_fig(
         fig,
         width=aastex.NoEscape(r"\columnwidth"),
     )
     plt.close(fig)
-    result.add_caption(
-        aastex.NoEscape(
-            r"""
+    result.add_caption(aastex.NoEscape(r"""
 The resolving power of each channel of FURST, computed from a raytrace
 of the instrument model.
 The line spread function is integrated over the whole solar disk and the
 whole pupil, its width includes the width of a pixel, and the resolvable
 wavelength difference is taken to be twice that width.
-The dashed line marks the requirement of \ensuremath{2 \times 10^4}."""
-        )
-    )
+The dashed line marks the requirement of \ensuremath{2 \times 10^4}."""))
 
     return result

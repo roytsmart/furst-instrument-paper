@@ -87,6 +87,35 @@ def _rowland_circle(
     )
 
 
+def _extent_x(
+    instrument: furst.instruments.Instrument,
+) -> tuple[na.AbstractScalar, na.AbstractScalar]:
+    """
+    The least and greatest horizontal position of any optic in the drawing.
+
+    Read from the outlines of the apertures rather than from their centers,
+    so that the grating, which is wide, is not cut off at its edge.
+    """
+    components = (
+        instrument.feed_optic,
+        instrument.grating,
+        instrument.camera.sensor,
+    )
+    x_min = []
+    x_max = []
+    for component in components:
+        surface = component.surface
+        wire = surface.transformation(surface.aperture.wire())
+        x_min.append(_millimeters(wire.x.min()))
+        x_max.append(_millimeters(wire.x.max()))
+    return min(x_min) * u.mm, max(x_max) * u.mm
+
+
+def _millimeters(value: u.Quantity | na.AbstractScalar) -> float:
+    """The value in millimeters, as a plain number for :mod:`matplotlib`."""
+    return float(na.as_named_array(value).ndarray.to_value(u.mm))
+
+
 def layout() -> aastex.FigureStar:
     """
     The optical layout of FURST, drawn from the instrument model.
@@ -96,7 +125,6 @@ def layout() -> aastex.FigureStar:
     channels.
     """
     instrument = _layout_instrument()
-    origin = na.Cartesian3dVectorArray() * u.mm
 
     with astropy.visualization.quantity_support(), plt.rc_context(_style.rc):
         fig, ax = plt.subplots(
@@ -128,13 +156,11 @@ def layout() -> aastex.FigureStar:
         )
 
         # the extent of the optics, which the Rowland circle is clipped to
-        position_feed = instrument.feed_optic.transformation(origin)
-        position_grating = instrument.grating.transformation(origin)
-        position_sensor = instrument.camera.sensor.transformation(origin)
-
-        x_max = position_feed.x.max() + _margin
-        x_min = min(position_grating.x.min(), position_sensor.x.min()) - _margin
-        ax.set_ylim(x_min.to_value(u.mm), x_max.to_value(u.mm))
+        x_min, x_max = _extent_x(instrument)
+        ax.set_ylim(
+            _millimeters(x_min - _margin),
+            _millimeters(x_max + _margin),
+        )
         ax.set_aspect("equal")
 
         ax.set_xlabel(f"$z$ ({ax.get_xlabel()})")
@@ -143,15 +169,12 @@ def layout() -> aastex.FigureStar:
         _annotate(ax, instrument)
 
     result = aastex.FigureStar("fig:layout", position="!ht")
-    result.append(aastex.NoEscape(r"\centering"))
     result.add_fig(
         fig,
         width=aastex.NoEscape(r"\textwidth"),
     )
     plt.close(fig)
-    result.add_caption(
-        aastex.NoEscape(
-            r"""
+    result.add_caption(aastex.NoEscape(r"""
 The optical layout of FURST, seen from above the optical table.
 Sunlight enters from the left and is reflected by one of seven convex
 cylindrical feed optics, each of which forms a virtual image of the Sun on
@@ -160,9 +183,7 @@ The concave diffraction grating, at the far side of the circle, disperses
 the light and focuses it back onto the circle at the detector.
 Each feed optic illuminates the grating at a different angle of incidence,
 so each channel places a different band of the spectrum on the detector.
-Three wavelengths are traced through each channel."""
-        )
-    )
+Three wavelengths are traced through each channel."""))
 
     return result
 
@@ -177,7 +198,12 @@ def _annotate(
     position_feed = instrument.feed_optic.transformation(origin)
     position_grating = instrument.grating.transformation(origin)
     position_sensor = instrument.camera.sensor.transformation(origin)
+
+    # the Rowland circle is labelled on its arc between the detector and the
+    # feed optics, where nothing else is drawn
     radius_rowland = instrument.grating.rowland_radius
+    x_circle = (position_feed.x.min() + position_sensor.x.max()) / 2
+    z_circle = np.sqrt(np.square(radius_rowland) - np.square(x_circle))
 
     labels = [
         (
@@ -200,16 +226,16 @@ def _annotate(
         ),
         (
             "Rowland circle",
-            0 * u.mm,
-            radius_rowland - 5 * u.mm,
-            dict(ha="center", va="top", color="gray"),
+            z_circle - 10 * u.mm,
+            x_circle,
+            dict(ha="right", va="center", color="gray"),
         ),
     ]
 
     for text, z, x, kwargs in labels:
         ax.text(
-            na.as_named_array(z).ndarray.to_value(u.mm),
-            na.as_named_array(x).ndarray.to_value(u.mm),
+            _millimeters(z),
+            _millimeters(x),
             text,
             fontsize=7,
             **kwargs,

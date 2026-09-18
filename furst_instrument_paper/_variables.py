@@ -88,7 +88,9 @@ def variables() -> list[aastex.Variable]:
         aastex.Variable("NumPixelY", int(sensor.num_pixel_active.y)),
         aastex.Variable(
             "DispersionPerPixel",
-            (performance.dispersion.mean().ndarray * sensor.width_pixel).to(u.pm).round(2),
+            (performance.dispersion.mean().ndarray * sensor.width_pixel)
+            .to(u.pm)
+            .round(2),
         ),
         aastex.Variable(
             "LsfWidthMin",
@@ -110,5 +112,7 @@ def variables() -> list[aastex.Variable]:
             "ResolvingPowerMax",
             int(np.round(performance.resolving_power.max().ndarray, -2)),
         ),
-        aastex.Variable("NumWavelengthTraced", performance.wavelength.shape[axis_wavelength]),
+        aastex.Variable(
+            "NumWavelengthTraced", performance.wavelength.shape[axis_wavelength]
+        ),
     ]
