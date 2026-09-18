@@ -23,7 +23,8 @@ def _prose() -> str:
 
 The performance of the optical design was evaluated by tracing rays through
 an idealized model of the instrument built with the open-source
-\texttt{optika} raytracing package.
+\href{https://optika.readthedocs.io}{\texttt{optika}} raytracing package
+\citep{optika}.
 The model is shown in Figure~\ref{fig:layout}.
 It places the \NumChannelsWords\ feed optics, the grating, and the detector
 at their design positions on the Rowland circle.
@@ -57,12 +58,16 @@ pupil at a single wavelength.
 We compute it by tracing \NumWavelengthTraced\ wavelengths spanning the
 detector in each channel, with the solar disk sampled by a stratified random
 grid of \NumFieldSamples\ points and the pupil by one of \NumPupilSamples\
-points, and measuring the standard deviation along the dispersion direction
-of the positions of the rays reaching the detector.
-This is added in quadrature with the standard deviation of a uniform
-distribution one pixel wide, to account for the finite size of the pixels.
-The resulting width of the LSF ranges from \LsfWidthMin\ to \LsfWidthMax\
-pixels.
+points.
+The result is shown in Figure~\ref{fig:lsf}: the image of the Sun at each
+wavelength is a line about a pixel wide, taller than the detector, and its
+profile along the dispersion direction is roughly Gaussian.
+We take the width of the LSF to be the standard deviation along the
+dispersion direction of the positions of the rays reaching the detector,
+added in quadrature with the standard deviation of a uniform distribution
+one pixel wide, to account for the finite size of the pixels.
+This width is shown in Figure~\ref{fig:lsfWidth} and ranges from
+\LsfWidthMin\ to \LsfWidthMax\ pixels.
 It grows toward the long-wavelength channels, whose feed optics sit farthest
 from the axis of the instrument, as the aberrations of the spherical grating
 grow with the angle of incidence.

@@ -12,6 +12,7 @@ from furst_instrument_paper import _export
 _document = r"""
 \documentclass[twocolumn]{emulateapj}
 \usepackage{graphicx}
+\usepackage{hyperref}
 \begin{document}
 \title{Test}
 \author{Test}
@@ -22,11 +23,13 @@ Test.
 \subsection{Design Rationale}
 \subsection{Optical Layout}
 \input{033_instrument_performance.tex}
+\bibliographystyle{aasjournalv7}
+\bibliography{033_instrument_performance}
 \end{document}
 """
 """
 A stand-in for the manuscript, in the class the draft uses, which includes
-the exported section the way the collaborator will.
+the exported section and bibliography the way the collaborator will.
 """
 
 
@@ -35,7 +38,10 @@ def test_export(tmp_path: pathlib.Path):
 
     assert all(path.exists() for path in result)
     assert (tmp_path / _export.filename_section).exists()
+    assert (tmp_path / _export.filename_bibliography).exists()
     assert (tmp_path / "figures" / "layout.pdf").exists()
+    assert (tmp_path / "figures" / "lsf.pdf").exists()
+    assert (tmp_path / "figures" / "lsfWidth.pdf").exists()
     assert (tmp_path / "figures" / "resolvingPower.pdf").exists()
 
     latex = (tmp_path / _export.filename_section).read_text(encoding="utf-8")
@@ -43,37 +49,51 @@ def test_export(tmp_path: pathlib.Path):
     assert r"\newcommand{\ResolvingPowerMin}" in latex
     assert "figures/layout.pdf" in latex
     assert r"\label{fig:layout}" in latex
+    assert r"\label{fig:lsf}" in latex
+    assert r"\label{fig:lsfWidth}" in latex
     assert r"\label{fig:resolvingPower}" in latex
+    assert r"\citep{optika}" in latex
+
+    bib = (tmp_path / _export.filename_bibliography).read_text(encoding="utf-8")
+    assert "@SOFTWARE{optika," in bib
 
 
 def _has_latex() -> bool:
     """Whether the section can be compiled on this machine."""
-    if shutil.which("pdflatex") is None or shutil.which("kpsewhich") is None:
-        return False
-    result = subprocess.run(
-        ["kpsewhich", "emulateapj.cls"],
-        capture_output=True,
-        text=True,
-    )
-    return result.returncode == 0 and result.stdout.strip() != ""
-
-
-@pytest.mark.skipif(not _has_latex(), reason="needs pdflatex and emulateapj")
-def test_compile(tmp_path: pathlib.Path):
-    """The exported section compiles when included in a manuscript."""
-    furst_instrument_paper.export(tmp_path)
-    (tmp_path / "test.tex").write_text(_document, encoding="utf-8")
-
-    for _ in range(2):
+    for program in ("pdflatex", "bibtex", "kpsewhich"):
+        if shutil.which(program) is None:
+            return False
+    for file in ("emulateapj.cls", "aasjournalv7.bst"):
         result = subprocess.run(
-            ["pdflatex", "-interaction=nonstopmode", "-halt-on-error", "test.tex"],
-            cwd=tmp_path,
+            ["kpsewhich", file],
             capture_output=True,
             text=True,
         )
-        assert result.returncode == 0, result.stdout[-3000:]
+        if result.returncode != 0 or not result.stdout.strip():
+            return False
+    return True
+
+
+def _run(command: list[str], cwd: pathlib.Path) -> None:
+    """Run a step of the LaTeX build, failing with its output if it fails."""
+    result = subprocess.run(command, cwd=cwd, capture_output=True, text=True)
+    assert result.returncode == 0, result.stdout[-3000:]
+
+
+@pytest.mark.skipif(not _has_latex(), reason="needs pdflatex, bibtex, and emulateapj")
+def test_compile(tmp_path: pathlib.Path):
+    """The exported section compiles, with its references, in a manuscript."""
+    furst_instrument_paper.export(tmp_path)
+    (tmp_path / "test.tex").write_text(_document, encoding="utf-8")
+
+    pdflatex = ["pdflatex", "-interaction=nonstopmode", "-halt-on-error", "test.tex"]
+    _run(pdflatex, tmp_path)
+    _run(["bibtex", "test"], tmp_path)
+    _run(pdflatex, tmp_path)
+    _run(pdflatex, tmp_path)
 
     assert (tmp_path / "test.pdf").exists()
     log = (tmp_path / "test.log").read_text(encoding="utf-8", errors="replace")
     assert "Undefined control sequence" not in log
     assert "undefined references" not in log
+    assert "undefined citations" not in log

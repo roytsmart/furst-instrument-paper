@@ -9,7 +9,8 @@ that comes from the optical model, subsection 3.3, *Optical Performance*, so
 that it stays in sync with the model instead of being drawn or typed by hand:
 
 - `033_instrument_performance.tex`, one file holding a `\newcommand` for
-  every number the section cites, the text of the section, and its figures, and
+  every number the section cites, the text of the section, and its figures,
+- `033_instrument_performance.bib`, the references the section cites, and
 - `figures/<name>.pdf`, the image of each figure, sized for the journal's
   column or text width.
 
@@ -30,7 +31,10 @@ In the manuscript, include the section where subsection 3.3 belongs:
 
 The figures are referenced as `figures/<name>.pdf`, relative to the main
 `.tex` file, and the section's macros are available to the rest of the
-manuscript after the `\input`.
+manuscript after the `\input`. The section links to the documentation of the
+raytracing package with `\href`, so the manuscript needs `hyperref`, and it
+cites the package with `\citep`, so `033_instrument_performance` should be
+added to the manuscript's `\bibliography`.
 
 Every Overleaf project has a git remote at `https://git.overleaf.com/<project id>`,
 so the exported files can be committed and pushed there like any other change.

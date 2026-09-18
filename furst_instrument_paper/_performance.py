@@ -46,6 +46,20 @@ class Performance:
     function.
     """
 
+    dx: na.AbstractScalar
+    """
+    The position of every ray on the detector along the dispersion
+    direction, relative to the mean position of its wavelength, in pixels.
+
+    Indexed by channel, wavelength, field, and pupil, like the rays.
+    """
+
+    position_y: na.AbstractScalar
+    """The position of every ray on the detector across the dispersion direction."""
+
+    weight: na.AbstractScalar
+    """One for every ray which reaches the detector, zero for the rest."""
+
 
 @functools.cache
 def performance() -> Performance:
@@ -98,4 +112,7 @@ def performance() -> Performance:
         width=width,
         dispersion=dispersion,
         resolving_power=resolving_power,
+        dx=dx,
+        position_y=position.y.to(u.mm),
+        weight=weight,
     )

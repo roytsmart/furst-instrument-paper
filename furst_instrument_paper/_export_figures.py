@@ -17,6 +17,8 @@ def figures() -> list[aastex.Figure]:
     """Every figure of the section, built from the model."""
     return [
         furst_instrument_paper.figures.layout(),
+        furst_instrument_paper.figures.lsf(),
+        furst_instrument_paper.figures.lsf_width(),
         furst_instrument_paper.figures.resolving_power(),
     ]
 

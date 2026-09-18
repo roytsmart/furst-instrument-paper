@@ -19,7 +19,7 @@ dependencies = [
     "num2words~=0.5",
     "matplotlib",
     "named-arrays",
-    "optika",
+    "optika~=2.8",
     "furst-optics~=0.1.0",
 ]
 dynamic = ["version"]
