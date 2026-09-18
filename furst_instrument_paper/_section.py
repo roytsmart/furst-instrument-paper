@@ -66,14 +66,14 @@ We take the width of the LSF to be the standard deviation along the
 dispersion direction of the positions of the rays reaching the detector,
 added in quadrature with the standard deviation of a uniform distribution
 one pixel wide, to account for the finite size of the pixels.
-This width is shown in Figure~\ref{fig:lsfWidth} and ranges from
-\LsfWidthMin\ to \LsfWidthMax\ pixels.
+This width is shown in the top panel of Figure~\ref{fig:resolvingPower} and
+ranges from \LsfWidthMin\ to \LsfWidthMax\ pixels.
 It grows toward the long-wavelength channels, whose feed optics sit farthest
 from the axis of the instrument, as the aberrations of the spherical grating
 grow with the angle of incidence.
 
 The resolving power, taken as the wavelength divided by twice the width of
-the LSF, is shown in Figure~\ref{fig:resolvingPower}.
+the LSF, is shown in the bottom panel of Figure~\ref{fig:resolvingPower}.
 It ranges from \ResolvingPowerMin\ to \ResolvingPowerMax\ over the traced
 wavelengths, with a mean of \ResolvingPowerMean, and so exceeds the
 requirement of \ensuremath{2 \times 10^4} throughout the bandpass.

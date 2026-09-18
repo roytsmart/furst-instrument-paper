@@ -41,7 +41,6 @@ def test_export(tmp_path: pathlib.Path):
     assert (tmp_path / _export.filename_bibliography).exists()
     assert (tmp_path / "figures" / "layout.pdf").exists()
     assert (tmp_path / "figures" / "lsf.pdf").exists()
-    assert (tmp_path / "figures" / "lsfWidth.pdf").exists()
     assert (tmp_path / "figures" / "resolvingPower.pdf").exists()
 
     latex = (tmp_path / _export.filename_section).read_text(encoding="utf-8")
@@ -50,7 +49,6 @@ def test_export(tmp_path: pathlib.Path):
     assert "figures/layout.pdf" in latex
     assert r"\label{fig:layout}" in latex
     assert r"\label{fig:lsf}" in latex
-    assert r"\label{fig:lsfWidth}" in latex
     assert r"\label{fig:resolvingPower}" in latex
     assert r"\citep{optika}" in latex
 

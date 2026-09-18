@@ -1,4 +1,5 @@
 import matplotlib.colors
+import matplotlib.lines
 import matplotlib.pyplot as plt
 import astropy.units as u
 import astropy.visualization
@@ -12,7 +13,7 @@ __all__ = [
     "lsf",
 ]
 
-_height = 3.4
+_height = 3.9
 """The height of the figure in inches."""
 
 _axis_row = "row"
@@ -95,7 +96,14 @@ def lsf() -> aastex.FigureStar:
             ax=axs_image,
         )
 
+        # The traced wavelengths differ from channel to channel, but their
+        # offsets from the center of the channel are nearly the same in every
+        # channel, so the legend names each color by that offset.
+        offset = performance.wavelength - performance.wavelength.mean(axis_wavelength)
+        offset = offset.mean(axis_channel)
+
         colormap = plt.get_cmap(_cmap)
+        handles = []
         for j in range(num_wavelength):
             # the color is passed as a string, since named_arrays would
             # otherwise try to broadcast the tuple over the channels
@@ -108,6 +116,25 @@ def lsf() -> aastex.FigureStar:
                 color=color,
                 linewidth=0.7,
             )
+            value = offset[{axis_wavelength: j}].ndarray
+            # adding zero turns a negative zero into a plain one
+            value = round(value.value, 1) + 0.0
+            label = f"{value:+.1f}" if value else f"{value:.1f}"
+            handles.append(
+                matplotlib.lines.Line2D(
+                    [],
+                    [],
+                    color=color,
+                    label=f"{label} {offset.unit}",
+                )
+            )
+
+        fig.legend(
+            handles=handles,
+            title="wavelength offset from the center of the channel",
+            loc="outside lower center",
+            ncols=num_wavelength,
+        )
 
         for i in range(num_channel):
             ax_image = axs_image[{axis_channel: i}].ndarray

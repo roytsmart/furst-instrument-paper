@@ -25,8 +25,11 @@ drawing. Moving it changes only where the incoming rays start being drawn.
 _color_rays = "tab:blue"
 """The color of the sunlight traced through the instrument."""
 
-_margin = 40 * u.mm
+_margin = 50 * u.mm
 """The space left around the optics on each side of the drawing."""
+
+_gap = 8
+"""The space, in millimeters, between a label and the outline it names."""
 
 _height = 2.4
 """The height of the figure in inches."""
@@ -101,14 +104,10 @@ def _extent_x(
         instrument.grating,
         instrument.camera.sensor,
     )
-    x_min = []
-    x_max = []
-    for component in components:
-        surface = component.surface
-        wire = surface.transformation(surface.aperture.wire())
-        x_min.append(_millimeters(wire.x.min()))
-        x_max.append(_millimeters(wire.x.max()))
-    return min(x_min) * u.mm, max(x_max) * u.mm
+    bounds = [_bounds(component) for component in components]
+    x_min = min(b.x_min for b in bounds)
+    x_max = max(b.x_max for b in bounds)
+    return x_min * u.mm, x_max * u.mm
 
 
 def _millimeters(value: u.Quantity | na.AbstractScalar) -> float:
@@ -192,41 +191,46 @@ def _annotate(
     ax: plt.Axes,
     instrument: furst.instruments.Instrument,
 ) -> None:
-    """Label the parts of the instrument the caption talks about."""
-    origin = na.Cartesian3dVectorArray() * u.mm
+    """
+    Label the parts of the instrument the caption talks about.
 
-    position_feed = instrument.feed_optic.transformation(origin)
-    position_grating = instrument.grating.transformation(origin)
-    position_sensor = instrument.camera.sensor.transformation(origin)
+    Every label sits just outside the outline of its part, on the side away
+    from the light: above the feed optics, whose incoming beam is below the
+    topmost of them, and below the grating and the detector, whose beams
+    arrive from above.
+    """
+    feed = _bounds(instrument.feed_optic)
+    grating = _bounds(instrument.grating)
+    sensor = _bounds(instrument.camera.sensor)
 
     # the Rowland circle is labelled on its arc between the detector and the
     # feed optics, where nothing else is drawn
-    radius_rowland = instrument.grating.rowland_radius
-    x_circle = (position_feed.x.min() + position_sensor.x.max()) / 2
+    radius_rowland = _millimeters(instrument.grating.rowland_radius)
+    x_circle = (feed.x_min + sensor.x_max) / 2
     z_circle = np.sqrt(np.square(radius_rowland) - np.square(x_circle))
 
     labels = [
         (
             "feed optics",
-            position_feed.z.mean() + 20 * u.mm,
-            position_feed.x.mean(),
-            dict(ha="left", va="center"),
+            (feed.z_min + feed.z_max) / 2,
+            feed.x_max + _gap,
+            dict(ha="center", va="bottom"),
         ),
         (
             "grating",
-            position_grating.z.mean() - 15 * u.mm,
-            position_grating.x.mean(),
-            dict(ha="right", va="center"),
+            (grating.z_min + grating.z_max) / 2,
+            grating.x_min - _gap,
+            dict(ha="center", va="top"),
         ),
         (
             "detector",
-            position_sensor.z.mean() + 15 * u.mm,
-            position_sensor.x.mean(),
-            dict(ha="left", va="center"),
+            (sensor.z_min + sensor.z_max) / 2,
+            sensor.x_min - _gap,
+            dict(ha="center", va="top"),
         ),
         (
             "Rowland circle",
-            z_circle - 10 * u.mm,
+            z_circle - _gap,
             x_circle,
             dict(ha="right", va="center", color="gray"),
         ),
@@ -234,9 +238,39 @@ def _annotate(
 
     for text, z, x, kwargs in labels:
         ax.text(
-            _millimeters(z),
-            _millimeters(x),
+            z,
+            x,
             text,
             fontsize=7,
             **kwargs,
         )
+
+
+@dataclasses.dataclass(frozen=True)
+class _Bounds:
+    """The extent of the outline of an optic in the drawing, in millimeters."""
+
+    x_min: float
+    x_max: float
+    z_min: float
+    z_max: float
+
+
+def _bounds(component) -> _Bounds:
+    """
+    The extent of the outline of an optic, read from its aperture.
+
+    The mechanical aperture is used where the optic has one, since that is
+    the outline drawn, and the clear aperture otherwise.
+    """
+    surface = component.surface
+    aperture = surface.aperture_mechanical
+    if aperture is None:
+        aperture = surface.aperture
+    wire = surface.transformation(aperture.wire())
+    return _Bounds(
+        x_min=_millimeters(wire.x.min()),
+        x_max=_millimeters(wire.x.max()),
+        z_min=_millimeters(wire.z.min()),
+        z_max=_millimeters(wire.z.max()),
+    )
