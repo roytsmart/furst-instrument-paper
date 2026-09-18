@@ -29,7 +29,7 @@ test = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/Kankelborg-Group/furst-instrument-paper"
+Homepage = "https://github.com/roytsmart/furst-instrument-paper"
 
 [tool.setuptools.packages.find]
 include = ["furst_instrument_paper*"]
