@@ -18,6 +18,14 @@ jobs:
         python-version: ["3.11", "3.13"]
     name: ${{ matrix.os }}, Python ${{ matrix.python-version }} test
     steps:
+      - name: Install the cairo library
+        # optika depends on rlPyCairo, whose pycairo wheel is built from
+        # source on Linux and needs the cairo headers. `apt-get` waits forever
+        # if another process on the runner holds the dpkg lock, so bound that
+        # wait, and refresh the stale index the runner ships with first.
+        run: >-
+          sudo apt-get update -o DPkg::Lock::Timeout=300 &&
+          sudo apt-get install -y -o DPkg::Lock::Timeout=300 libcairo2-dev
       - uses: actions/checkout@v4
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5

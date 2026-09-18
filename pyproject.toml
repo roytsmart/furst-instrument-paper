@@ -19,7 +19,9 @@ dependencies = [
     "matplotlib",
     "named-arrays",
     "optika",
-    "furst-optics",
+    # furst-optics has not been released since it gained the instrument
+    # model, so it is taken from its main branch until it is
+    "furst-optics @ git+https://github.com/Kankelborg-Group/furst-optics.git",
 ]
 dynamic = ["version"]
 
