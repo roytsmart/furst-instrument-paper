@@ -10,6 +10,7 @@ from ._variables import variables
 from ._section import section
 from ._bibliography import software, bibliography
 from ._export import export
+from ._preview import preview
 
 __all__ = [
     "figures",
@@ -21,4 +22,5 @@ __all__ = [
     "software",
     "bibliography",
     "export",
+    "preview",
 ]

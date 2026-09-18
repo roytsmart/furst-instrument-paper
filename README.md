@@ -1,8 +1,16 @@
 # furst-instrument-paper
 
+[![tests](https://github.com/roytsmart/furst-instrument-paper/actions/workflows/tests.yml/badge.svg)](https://github.com/roytsmart/furst-instrument-paper/actions/workflows/tests.yml)
+[![pdf](https://github.com/roytsmart/furst-instrument-paper/actions/workflows/pdf.yml/badge.svg)](https://github.com/roytsmart/furst-instrument-paper/actions/workflows/pdf.yml)
+
 Figures and numbers for the FURST instrument paper, generated from the
 [`furst-optics`](https://github.com/Kankelborg-Group/furst-optics) model of
 the instrument.
+
+**[Read the current section](https://roytsmart.github.io/furst-instrument-paper/optical-performance.pdf)**,
+rebuilt from the model on every push to `main`. It is the exported section
+inside the smallest manuscript that can hold it, so it shows exactly what the
+corresponding author will get.
 
 The manuscript itself lives in Overleaf. This package produces the part of it
 that comes from the optical model, subsection 3.3, *Optical Performance*, so
@@ -65,4 +73,12 @@ pytest
 
 The tests build every figure, check every variable, run the export into a
 temporary directory, and, where `pdflatex` and the `emulateapj` class are
-available, compile the exported section inside a stand-in manuscript.
+available, compile the exported section inside a stand-in manuscript. That
+last test is skipped by the `tests` workflow, which has no LaTeX, and runs in
+the `pdf` workflow, which does.
+
+To build the preview locally:
+
+```bash
+python -c "import furst_instrument_paper; furst_instrument_paper.preview('preview')"
+```

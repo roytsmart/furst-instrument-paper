@@ -55,6 +55,14 @@ python -c "import furst_instrument_paper; furst_instrument_paper.export('path/to
   the assembly of the exported file.
 - `_export_figures.py` and `_export.py`: write the files above.
 
+- `_preview.py`: the stand-in manuscript and `preview()`, which exports the
+  section into it and compiles it. Both the compile test and CI use this.
+
+`.github/workflows/pdf.yml` runs the tests with LaTeX installed, so the
+compile test actually runs, then builds the preview and publishes it to the
+`gh-pages` branch, served at
+<https://roytsmart.github.io/furst-instrument-paper/optical-performance.pdf>.
+
 Publishing a release runs `.github/workflows/overleaf.yml`, which exports the
 section, attaches it to the release, and pushes it to the Overleaf project
 using the `OVERLEAF_TOKEN` and `OVERLEAF_PROJECT_ID` secrets.

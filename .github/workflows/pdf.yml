@@ -1,0 +1,101 @@
+name: pdf
+
+# Build the preview of the section and publish it to GitHub Pages.
+#
+# The preview is the exported section inside the smallest manuscript which
+# can hold it, so this is also where the compile test actually runs: the
+# `tests` workflow has no LaTeX and skips it.
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+# Every run publishes to the same branch, so serialize them.
+concurrency:
+  group: gh-pages
+  cancel-in-progress: false
+
+jobs:
+  pdf:
+    name: Build and publish the preview
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Install LaTeX and the cairo library
+        # `texlive-publishers` carries the journal's class and bibliography
+        # style, and optika's rlPyCairo dependency needs the cairo headers.
+        # `apt-get` waits forever if another process holds the dpkg lock, so
+        # bound that wait and refresh the runner's stale index first.
+        run: >-
+          sudo apt-get update -o DPkg::Lock::Timeout=300 &&
+          sudo apt-get install -y -o DPkg::Lock::Timeout=300
+          texlive-publishers texlive-science texlive-fonts-recommended
+          texlive-latex-extra cm-super libcairo2-dev
+
+      - uses: actions/checkout@v4
+        with:
+          # setuptools-scm reads the version from the tags
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install package
+        run: |
+          python -m pip install --upgrade pip
+          pip install setuptools wheel
+          pip install -e .[test]
+
+      - name: Test with pytest
+        # With LaTeX installed, this runs the compile test as well, which
+        # checks the section for undefined references and citations.
+        run: pytest
+
+      - name: Build the preview
+        run: |
+          python -c "import furst_instrument_paper; furst_instrument_paper.preview('preview')"
+          ls preview
+
+      - name: Upload the preview
+        uses: actions/upload-artifact@v4
+        with:
+          name: preview
+          path: preview/optical-performance.pdf
+
+      - name: Publish the preview to the gh-pages branch
+        if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SHA: ${{ github.sha }}
+        run: |
+          remote="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          if git clone --depth 1 --branch gh-pages "$remote" pages 2>/dev/null; then
+            echo "cloned the existing gh-pages branch"
+          else
+            echo "gh-pages does not exist yet; creating it"
+            mkdir pages
+            cd pages
+            git init -q
+            git checkout -q -b gh-pages
+            git remote add origin "$remote"
+            cd ..
+          fi
+
+          cp preview/optical-performance.pdf pages/
+
+          cd pages
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add --all
+          if git diff --cached --quiet; then
+            echo "The preview is unchanged; nothing to publish."
+          else
+            git commit -q -m "Publish the preview for ${SHA:0:7}"
+            git push -q origin gh-pages
+          fi
