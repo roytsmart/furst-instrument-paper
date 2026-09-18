@@ -53,8 +53,15 @@ def test_export(tmp_path: pathlib.Path):
     assert r"\label{fig:resolvingPower}" in latex
     assert r"\citep{optika}" in latex
 
+    # every package the prose cites has an entry, and every entry is cited
     bib = (tmp_path / _export.filename_bibliography).read_text(encoding="utf-8")
-    assert "@SOFTWARE{optika," in bib
+    for item in furst_instrument_paper.software():
+        assert f"@SOFTWARE{{{item.key}," in bib
+        assert item.key in latex
+        assert item.url in latex
+
+    # a citation without a year is typeset as "????"
+    assert bib.count("year = {") == len(furst_instrument_paper.software())
 
 
 def _has_latex() -> bool:

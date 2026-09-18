@@ -47,9 +47,17 @@ python -c "import furst_instrument_paper; furst_instrument_paper.export('path/to
   `_style.rc`.
 - `_variables.py`: the `aastex.Variable` list. Add a variable rather than
   typing a number into the prose.
+- `_bibliography.py`: the software the section cites, whose versions are read
+  from the installed distributions.
+- `_tables.py`: the comparison of the draft's design parameters with the
+  model's, whose disagreements are flagged by hand on each row.
 - `_section.py`: the prose of the section, citing only those variables, and
   the assembly of the exported file.
 - `_export_figures.py` and `_export.py`: write the files above.
+
+Publishing a release runs `.github/workflows/overleaf.yml`, which exports the
+section, attaches it to the release, and pushes it to the Overleaf project
+using the `OVERLEAF_TOKEN` and `OVERLEAF_PROJECT_ID` secrets.
 
 Each figure and variable has a test, `_section_test.py` checks that the prose
 cites no undefined macro, `_export_test.py` compiles the section in a stand-in

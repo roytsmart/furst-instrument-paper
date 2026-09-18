@@ -39,6 +39,24 @@ added to the manuscript's `\bibliography`.
 Every Overleaf project has a git remote at `https://git.overleaf.com/<project id>`,
 so the exported files can be committed and pushed there like any other change.
 
+## Delivery
+
+Publishing a release runs the `overleaf` workflow, which exports the section,
+attaches it to the release, and pushes it to the Overleaf project as a single
+commit. The same workflow can be run by hand from the Actions tab to deliver
+without cutting a version.
+
+It needs two repository secrets, and warns and skips the push without them:
+
+| Secret | Value |
+|---|---|
+| `OVERLEAF_TOKEN` | A git authentication token from Overleaf's account settings |
+| `OVERLEAF_PROJECT_ID` | The part of the project's git URL after `git.overleaf.com/` |
+
+The workflow only ever writes the files this package owns, and clones the
+project fresh each time, since Overleaf refuses a push that is not a
+fast-forward.
+
 ## Tests
 
 ```bash

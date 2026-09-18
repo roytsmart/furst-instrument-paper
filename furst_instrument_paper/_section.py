@@ -23,7 +23,9 @@ def _prose() -> str:
 \label{sec:opticalPerformance}
 
 The performance of the optical design was evaluated by tracing rays through
-an idealized model of the instrument built with the open-source
+an idealized model of the instrument,
+\href{https://furst-optics.readthedocs.io}{\texttt{furst-optics}}
+\citep{furstOptics}, built with the open-source
 \href{https://optika.readthedocs.io}{\texttt{optika}} raytracing package
 \citep{optika}.
 The model is shown in Figure~\ref{fig:layout} and its parameters are
@@ -79,6 +81,11 @@ the LSF, is shown in the bottom panel of Figure~\ref{fig:resolvingPower}.
 It ranges from \ResolvingPowerMin\ to \ResolvingPowerMax\ over the traced
 wavelengths, with a mean of \ResolvingPowerMean, and so exceeds the
 requirement of \ensuremath{2 \times 10^4} throughout the bandpass.
+
+Every figure and numerical value in this section is computed from the
+instrument model by
+\href{https://github.com/roytsmart/furst-instrument-paper}{\texttt{furst-instrument-paper}}
+\citep{furstInstrumentPaper}, so that they cannot drift from it.
 """
 
 

@@ -8,7 +8,7 @@ from ._instrument import instrument
 from ._performance import Performance, performance
 from ._variables import variables
 from ._section import section
-from ._bibliography import bibliography
+from ._bibliography import software, bibliography
 from ._export import export
 
 __all__ = [
@@ -18,6 +18,7 @@ __all__ = [
     "performance",
     "variables",
     "section",
+    "software",
     "bibliography",
     "export",
 ]
