@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "furst-instrument-paper"
+authors = [
+    {name = "Roy T. Smart", email = "roytsmart@gmail.com"},
+]
+description = "Figures and numbers for the FURST instrument paper, generated from the furst-optics model."
+readme = "README.md"
+requires-python = ">=3.11"
+classifiers = [
+    "Programming Language :: Python :: 3",
+]
+dependencies = [
+    "pylatex~=1.4",
+    "aastex~=0.6",
+    "matplotlib",
+    "named-arrays",
+    "optika",
+    "furst-optics",
+]
+dynamic = ["version"]
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+]
+
+[project.urls]
+Homepage = "https://github.com/Kankelborg-Group/furst-instrument-paper"
+
+[tool.setuptools.packages.find]
+include = ["furst_instrument_paper*"]
+
+[tool.setuptools_scm]
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F"]

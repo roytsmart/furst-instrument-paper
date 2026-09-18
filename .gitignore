@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# tooling caches
+.pytest_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+.cache/
+
+# editors
+.idea/
+.vscode/
+.ipynb_checkpoints/
+
+# docs build
+docs/_build/
+docs/_autosummary/
+
+# LaTeX build artifacts
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.synctex.gz
+
+# The generated article and its figures, which aastex writes next to the
+# .tex file. Both are reproducible by running `esis_instrument_paper.pdf()`,
+# so neither is committed. Static figures that are not generated belong in a
+# subdirectory (e.g. `figures/static/`) so that they are not ignored here.
+esis_instrument_paper/esis-instrument.tex
+esis_instrument_paper/*.pdf
+
+# submission archives built by `aastex.Document.generate_archive()`
+*.zip
+*.tar.gz
+
+# reference material consulted while writing, which is not ours to distribute
+HTC_Thesis_V7.2.pdf
