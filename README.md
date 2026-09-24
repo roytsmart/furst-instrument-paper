@@ -54,7 +54,7 @@ so the exported files can be committed and pushed there like any other change.
 ## Delivery
 
 Publishing a release runs the `overleaf` workflow, which exports the sections,
-attaches it to the release, and pushes it to the Overleaf project as a single
+attaches them to the release, and pushes them to the Overleaf project as a single
 commit. The same workflow can be run by hand from the Actions tab to deliver
 without cutting a version.
 
