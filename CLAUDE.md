@@ -35,12 +35,18 @@ python -c "import furst_instrument_paper; furst_instrument_paper.export('path/to
 
 ## Architecture
 
-- `_instrument.py`: the final design from `furst.instruments.design()`, with
-  seeded stratified random field and pupil samples drawn separately for each
-  channel. Every performance figure traces this one instrument.
+- `_instrument.py`: the instrument as it was built and flown, from
+  `furst.instruments.as_built()`, with seeded stratified random field and
+  pupil samples drawn separately for each channel. Every performance figure
+  traces this one instrument.
 - `_performance.py`: the disk-integrated line spread function, its width
   (including the width of a pixel in quadrature), the dispersion, and the
   resolving power, following the original design study.
+- `_radiometry.py`: the effective area, the terms it is the product of
+  (feed optic reflectance, grating efficiency, filter transmission, detector
+  absorbance), and the response, which adds the charge collection
+  efficiency and quantum yield of the detector and is given per unit energy,
+  in e- cm^2 erg^-1, following the design report of `furst-optics`.
 - `figures/`: one module per figure, each a function returning an
   `aastex.Figure` whose caption is written here. Figures are sized with
   `aastex.column_width_inches` or `aastex.text_width_inches` and styled with
@@ -48,9 +54,10 @@ python -c "import furst_instrument_paper; furst_instrument_paper.export('path/to
 - `_variables.py`: the `aastex.Variable` list. Add a variable rather than
   typing a number into the prose.
 - `_bibliography.py`: the software the section cites, whose versions are read
-  from the installed distributions.
-- `_tables.py`: the comparison of the draft's design parameters with the
-  model's, whose disagreements are flagged by hand on each row.
+  from the installed distributions, and the other references it cites.
+- `_tables.py`: the comparison of the draft's design parameters (its Table 3)
+  with the model's, whose disagreements are flagged by hand on each row, and
+  of the terms of its effective area (its Table 4) with the model's.
 - `_section.py`: the prose of the section, citing only those variables, and
   the assembly of the exported file.
 - `_export_figures.py` and `_export.py`: write the files above.

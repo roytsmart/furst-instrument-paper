@@ -5,6 +5,7 @@ import aastex
 import named_arrays as na
 import furst_instrument_paper
 from ._instrument import axis_channel, axis_wavelength, num_field, num_pupil
+from ._radiometry import unit_response
 
 __all__ = [
     "variables",
@@ -32,10 +33,15 @@ def variables() -> list[aastex.Variable]:
     """
     instrument = furst_instrument_paper.instrument()
     performance = furst_instrument_paper.performance()
+    radiometry = furst_instrument_paper.radiometry()
 
     feed_optic = instrument.feed_optic
     grating = instrument.grating
     sensor = instrument.camera.sensor
+
+    # the instrument was laid out for a grating whose radius is the
+    # diameter of the Rowland circle, and the flight grating differs from it
+    radius_layout = 2 * grating.rowland_radius
 
     origin = na.Cartesian3dVectorArray() * u.mm
 
@@ -73,10 +79,20 @@ def variables() -> list[aastex.Variable]:
         ),
         aastex.Variable("ChannelOverlap", overlap.min().ndarray.round(1)),
         aastex.Variable("RowlandRadius", grating.rowland_radius.round(0)),
+        aastex.Variable("GratingRadiusLayout", radius_layout.round(0)),
         aastex.Variable("GratingRadius", np.abs(grating.sag.radius).round(0)),
         aastex.Variable("GratingRulingDensity", ruling_density.round(0)),
-        aastex.Variable("GratingWidthClear", grating.width_clear.x.round(0)),
+        aastex.Variable("GratingWidthClear", grating.width_clear.x.round(1)),
         aastex.Variable("GratingHeightClear", grating.width_clear.y.round(1)),
+        aastex.Variable("FilterThickness", instrument.filter.thickness.round(3)),
+        aastex.Variable(
+            "FocusTranslation",
+            na.as_named_array(feed_optic.translation_focus).ndarray.round(1),
+        ),
+        aastex.Variable(
+            "FocusAngle",
+            np.abs(na.as_named_array(feed_optic.angle_focus).ndarray).round(2),
+        ),
         aastex.Variable("FeedOpticRadius", feed_optic.radius),
         aastex.Variable("FeedOpticHeight", feed_optic.aperture_height.ndarray.round(1)),
         aastex.Variable("FeedOpticSubtent", feed_optic.aperture_subtent),
@@ -121,6 +137,40 @@ def variables() -> list[aastex.Variable]:
         ),
         aastex.Variable("NumFieldSamples", _grid(num_field)),
         aastex.Variable("NumPupilSamples", _grid(num_pupil)),
+        # the terms of the effective area are cited as their means over the
+        # sampled wavelengths of every channel, and the effective area, the
+        # quantum yield, and the response as their ranges
+        aastex.Variable(
+            "AreaEffectiveMin",
+            radiometry.area_effective.min().ndarray.round(3),
+        ),
+        aastex.Variable(
+            "AreaEffectiveMax",
+            radiometry.area_effective.max().ndarray.round(3),
+        ),
+        aastex.Variable(
+            "AreaCollecting",
+            radiometry.area_collecting.mean().ndarray.round(1),
+        ),
+        aastex.Variable("ReflectanceFeed", _percent(radiometry.reflectance_feed)),
+        aastex.Variable("EfficiencyGrating", _percent(radiometry.efficiency_grating)),
+        aastex.Variable("TransmissionFilter", _percent(radiometry.transmission_filter)),
+        aastex.Variable("AbsorbanceSensor", _percent(radiometry.absorbance)),
+        aastex.Variable(
+            "ChargeCollection",
+            _decimals(radiometry.charge_collection.mean(), u.one),
+        ),
+        aastex.Variable("QuantumEfficiency", _percent(radiometry.quantum_efficiency)),
+        aastex.Variable(
+            "QuantumYieldMin",
+            _decimals(radiometry.quantum_yield.min(), u.electron / u.ph, num=1),
+        ),
+        aastex.Variable(
+            "QuantumYieldMax",
+            _decimals(radiometry.quantum_yield.max(), u.electron / u.ph, num=1),
+        ),
+        aastex.Variable("ResponseMin", _response(radiometry.response.min())),
+        aastex.Variable("ResponseMax", _response(radiometry.response.max())),
     ]
 
 
@@ -133,6 +183,23 @@ def _hundreds(value: na.AbstractScalar) -> str:
     """A large dimensionless number rounded to the hundreds, thousands separated."""
     result = int(np.round(na.as_named_array(value).ndarray.to_value(u.one), -2))
     return f"{result:,}"
+
+
+def _percent(value: na.AbstractScalar) -> str:
+    """The mean of a dimensionless fraction, as a whole percentage."""
+    mean = na.as_named_array(value).mean().ndarray.to_value(u.one)
+    return aastex.NoEscape(rf"{100 * mean:.0f}\%")
+
+
+def _response(value: na.AbstractScalar) -> str:
+    """A response, in scientific notation with two significant figures."""
+    value = na.as_named_array(value).ndarray.to_value(unit_response)
+    exponent = int(np.floor(np.log10(value)))
+    mantissa = value / 10**exponent
+    unit = r"\mathrm{e^{-}\,cm^{2}\,erg^{-1}}"
+    return aastex.NoEscape(
+        rf"\ensuremath{{{mantissa:.1f} \times 10^{{{exponent}}}\,{unit}}}"
+    )
 
 
 def _grid(num: int) -> str:

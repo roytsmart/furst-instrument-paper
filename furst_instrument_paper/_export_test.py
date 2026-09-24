@@ -1,3 +1,4 @@
+import re
 import pathlib
 import pytest
 import matplotlib
@@ -5,7 +6,7 @@ import matplotlib
 matplotlib.use("agg")
 
 import furst_instrument_paper
-from furst_instrument_paper import _export, _preview
+from furst_instrument_paper import _bibliography, _export, _preview
 
 
 def test_export(tmp_path: pathlib.Path):
@@ -17,6 +18,7 @@ def test_export(tmp_path: pathlib.Path):
     assert (tmp_path / "figures" / "layout.pdf").exists()
     assert (tmp_path / "figures" / "lsf.pdf").exists()
     assert (tmp_path / "figures" / "resolvingPower.pdf").exists()
+    assert (tmp_path / "figures" / "effectiveArea.pdf").exists()
 
     latex = (tmp_path / _export.filename_section).read_text(encoding="utf-8")
     assert r"\subsection{Optical Performance}" in latex
@@ -26,6 +28,8 @@ def test_export(tmp_path: pathlib.Path):
     assert r"\label{fig:layout}" in latex
     assert r"\label{fig:lsf}" in latex
     assert r"\label{fig:resolvingPower}" in latex
+    assert r"\label{fig:effectiveArea}" in latex
+    assert r"\label{tab:throughput}" in latex
     assert r"\citep{optika}" in latex
 
     # every package the prose cites has an entry, and every entry is cited
@@ -35,8 +39,15 @@ def test_export(tmp_path: pathlib.Path):
         assert item.key in latex
         assert item.url in latex
 
+    # and so has every other reference, each of which is cited
+    for entry in _bibliography.references:
+        key = re.match(r"@\w+\{(\w+),", entry).group(1)
+        assert key in bib
+        assert key in latex
+
     # a citation without a year is typeset as "????"
-    assert bib.count("year = {") == len(furst_instrument_paper.software())
+    num_entries = len(furst_instrument_paper.software()) + len(_bibliography.references)
+    assert bib.count("year = {") == num_entries
 
 
 @pytest.mark.skipif(

@@ -48,7 +48,7 @@ def _layout_instrument() -> furst.instruments.Instrument:
     The instrument as drawn, with the sunlight entering just behind the
     grating and only enough rays to show its path.
     """
-    result = furst.instruments.design(
+    result = furst.instruments.as_built(
         num_wavelength=3,
         num_field=1,
         num_pupil=1,

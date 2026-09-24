@@ -19,6 +19,7 @@ def figures() -> list[aastex.Figure]:
         furst_instrument_paper.figures.layout(),
         furst_instrument_paper.figures.lsf(),
         furst_instrument_paper.figures.resolving_power(),
+        furst_instrument_paper.figures.effective_area(),
     ]
 
 

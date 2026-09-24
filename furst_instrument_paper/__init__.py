@@ -6,6 +6,7 @@ Figures and numbers for the FURST instrument paper, generated from the
 from . import figures
 from ._instrument import instrument
 from ._performance import Performance, performance
+from ._radiometry import Radiometry, radiometry
 from ._variables import variables
 from ._section import section
 from ._bibliography import software, bibliography
@@ -17,6 +18,8 @@ __all__ = [
     "instrument",
     "Performance",
     "performance",
+    "Radiometry",
+    "radiometry",
     "variables",
     "section",
     "software",
