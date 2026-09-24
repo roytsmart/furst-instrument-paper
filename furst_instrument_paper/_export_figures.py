@@ -4,6 +4,8 @@ import furst_instrument_paper
 
 __all__ = [
     "directory_figures",
+    "figures_performance",
+    "figures_response",
     "figures",
     "figures_latex",
     "save_figures",
@@ -13,14 +15,25 @@ directory_figures = "figures"
 """The directory, inside the manuscript, that the figure images are written to."""
 
 
-def figures() -> list[aastex.Figure]:
-    """Every figure of the section, built from the model."""
+def figures_performance() -> list[aastex.Figure]:
+    """The figures of the optical performance section, built from the model."""
     return [
         furst_instrument_paper.figures.layout(),
         furst_instrument_paper.figures.lsf(),
         furst_instrument_paper.figures.resolving_power(),
-        furst_instrument_paper.figures.effective_area(),
     ]
+
+
+def figures_response() -> list[aastex.Figure]:
+    """The figures of the response section, built from the model."""
+    return [
+        furst_instrument_paper.figures.response(),
+    ]
+
+
+def figures() -> list[aastex.Figure]:
+    """Every figure of every section, built from the model."""
+    return figures_performance() + figures_response()
 
 
 def _latex(figure: aastex.Figure) -> str:
@@ -37,9 +50,9 @@ def _latex(figure: aastex.Figure) -> str:
     return latex
 
 
-def figures_latex() -> str:
-    """The ``figure`` environments of every figure, one after another."""
-    return "\n\n".join(_latex(figure) for figure in figures())
+def figures_latex(figures: list[aastex.Figure]) -> str:
+    """The ``figure`` environments of the given figures, one after another."""
+    return "\n\n".join(_latex(figure) for figure in figures)
 
 
 def save_figures(directory: str | pathlib.Path) -> list[pathlib.Path]:

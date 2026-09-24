@@ -8,10 +8,10 @@ import aastex
 import furst_instrument_paper
 
 
-def test_effective_area():
-    result = furst_instrument_paper.figures.effective_area()
+def test_response():
+    result = furst_instrument_paper.figures.response()
     assert isinstance(result, aastex.Figure)
-    assert "fig:effectiveArea" in result.dumps()
+    assert "fig:response" in result.dumps()
     assert len(result.images) == 1
 
 

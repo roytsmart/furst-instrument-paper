@@ -7,18 +7,20 @@ Figures and numbers for the FURST instrument paper, generated from the
 [`furst-optics`](https://github.com/Kankelborg-Group/furst-optics) model of
 the instrument.
 
-**[Read the current section](https://roytsmart.github.io/furst-instrument-paper/optical-performance.pdf)**,
-rebuilt from the model on every push to `main`. It is the exported section
-inside the smallest manuscript that can hold it, so it shows exactly what the
-corresponding author will get.
+**[Read the current sections](https://roytsmart.github.io/furst-instrument-paper/optical-performance.pdf)**,
+rebuilt from the model on every push to `main`. It is the exported sections
+inside the smallest manuscript that can hold them, so it shows exactly what
+the corresponding author will get.
 
-The manuscript itself lives in Overleaf. This package produces the part of it
-that comes from the optical model, subsection 3.3, *Optical Performance*, so
-that it stays in sync with the model instead of being drawn or typed by hand:
+The manuscript itself lives in Overleaf. This package produces the parts of
+it that come from the optical model, subsections 3.3, *Optical Performance*,
+and 3.4, *Response*, so that they stay in sync with the model instead of
+being drawn or typed by hand:
 
 - `033_instrument_performance.tex`, one file holding a `\newcommand` for
   every number the section cites, the text of the section, and its figures,
-- `033_instrument_performance.bib`, the references the section cites, and
+- `034_response.tex`, the response section, built the same way,
+- `033_instrument_performance.bib`, the references both sections cite, and
 - `figures/<name>.pdf`, the image of each figure, sized for the journal's
   column or text width.
 
@@ -31,17 +33,19 @@ pip install -e .[test]
 python -c "import furst_instrument_paper; furst_instrument_paper.export('path/to/overleaf')"
 ```
 
-In the manuscript, include the section where subsection 3.3 belongs:
+In the manuscript, include each section where it belongs, subsection 3.3 and
+then 3.4:
 
 ```latex
 \input{033_instrument_performance.tex}
+\input{034_response.tex}
 ```
 
 The figures are referenced as `figures/<name>.pdf`, relative to the main
-`.tex` file, and the section's macros are available to the rest of the
-manuscript after the `\input`. The section links to the documentation of the
-raytracing package with `\href`, so the manuscript needs `hyperref`, and it
-cites the package with `\citep`, so `033_instrument_performance` should be
+`.tex` file, and each section's macros are available to the rest of the
+manuscript after its `\input`. The sections link to the documentation of the
+raytracing package with `\href`, so the manuscript needs `hyperref`, and they
+cite with `\citep` and `\citet`, so `033_instrument_performance` should be
 added to the manuscript's `\bibliography`.
 
 Every Overleaf project has a git remote at `https://git.overleaf.com/<project id>`,
@@ -49,7 +53,7 @@ so the exported files can be committed and pushed there like any other change.
 
 ## Delivery
 
-Publishing a release runs the `overleaf` workflow, which exports the section,
+Publishing a release runs the `overleaf` workflow, which exports the sections,
 attaches it to the release, and pushes it to the Overleaf project as a single
 commit. The same workflow can be run by hand from the Actions tab to deliver
 without cutting a version.
@@ -73,7 +77,7 @@ pytest
 
 The tests build every figure, check every variable, run the export into a
 temporary directory, and, where `pdflatex` and the `emulateapj` class are
-available, compile the exported section inside a stand-in manuscript. That
+available, compile the exported sections inside a stand-in manuscript. That
 last test is skipped by the `tests` workflow, which has no LaTeX, and runs in
 the `pdf` workflow, which does.
 

@@ -9,6 +9,7 @@ from ._radiometry import unit_response
 
 __all__ = [
     "variables",
+    "variables_response",
 ]
 
 
@@ -33,7 +34,6 @@ def variables() -> list[aastex.Variable]:
     """
     instrument = furst_instrument_paper.instrument()
     performance = furst_instrument_paper.performance()
-    radiometry = furst_instrument_paper.radiometry()
 
     feed_optic = instrument.feed_optic
     grating = instrument.grating
@@ -137,17 +137,26 @@ def variables() -> list[aastex.Variable]:
         ),
         aastex.Variable("NumFieldSamples", _grid(num_field)),
         aastex.Variable("NumPupilSamples", _grid(num_pupil)),
-        # the terms of the effective area are cited as their means over the
-        # sampled wavelengths of every channel, and the effective area, the
-        # quantum yield, and the response as their ranges
-        aastex.Variable(
-            "AreaEffectiveMin",
-            radiometry.area_effective.min().ndarray.round(3),
-        ),
-        aastex.Variable(
-            "AreaEffectiveMax",
-            radiometry.area_effective.max().ndarray.round(3),
-        ),
+    ]
+
+
+def variables_response() -> list[aastex.Variable]:
+    """
+    A LaTeX variable for every numeric quantity the response section cites.
+
+    Kept apart from :func:`variables`, since each exported file defines the
+    macros it cites, and no name may be defined by both.
+
+    The efficiencies are cited as their means over the sampled wavelengths
+    of every channel, and the effective area, the quantum yield, and the
+    response as their ranges.
+    """
+    radiometry = furst_instrument_paper.radiometry()
+
+    unit_yield = u.electron / u.ph
+    area_electrons = radiometry.area_effective_electrons
+
+    return [
         aastex.Variable(
             "AreaCollecting",
             radiometry.area_collecting.mean().ndarray.round(1),
@@ -160,15 +169,28 @@ def variables() -> list[aastex.Variable]:
             "ChargeCollection",
             _decimals(radiometry.charge_collection.mean(), u.one),
         ),
-        aastex.Variable("QuantumEfficiency", _percent(radiometry.quantum_efficiency)),
         aastex.Variable(
             "QuantumYieldMin",
-            _decimals(radiometry.quantum_yield.min(), u.electron / u.ph, num=1),
+            _decimals(radiometry.quantum_yield.min(), unit_yield, num=1),
         ),
         aastex.Variable(
             "QuantumYieldMax",
-            _decimals(radiometry.quantum_yield.max(), u.electron / u.ph, num=1),
+            _decimals(radiometry.quantum_yield.max(), unit_yield, num=1),
         ),
+        aastex.Variable(
+            "QuantumEfficiency",
+            _per_photon(radiometry.quantum_efficiency.mean()),
+        ),
+        aastex.Variable(
+            "QuantumEfficiencyMin",
+            _per_photon(radiometry.quantum_efficiency.min()),
+        ),
+        aastex.Variable(
+            "QuantumEfficiencyMax",
+            _per_photon(radiometry.quantum_efficiency.max()),
+        ),
+        aastex.Variable("AreaEffectiveMin", area_electrons.min().ndarray.round(3)),
+        aastex.Variable("AreaEffectiveMax", area_electrons.max().ndarray.round(3)),
         aastex.Variable("ResponseMin", _response(radiometry.response.min())),
         aastex.Variable("ResponseMax", _response(radiometry.response.max())),
     ]
@@ -189,6 +211,13 @@ def _percent(value: na.AbstractScalar) -> str:
     """The mean of a dimensionless fraction, as a whole percentage."""
     mean = na.as_named_array(value).mean().ndarray.to_value(u.one)
     return aastex.NoEscape(rf"{100 * mean:.0f}\%")
+
+
+def _per_photon(value: na.AbstractScalar) -> str:
+    """A quantum efficiency, in electrons per photon to two decimals."""
+    value = na.as_named_array(value).ndarray.to_value(u.electron / u.ph)
+    unit = r"\mathrm{e^{-}\,photon^{-1}}"
+    return aastex.NoEscape(rf"\ensuremath{{{value:.2f}\,{unit}}}")
 
 
 def _response(value: na.AbstractScalar) -> str:

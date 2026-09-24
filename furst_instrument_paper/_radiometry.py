@@ -95,11 +95,27 @@ class Radiometry:
     @property
     def quantum_efficiency(self) -> na.AbstractScalar:
         """
-        The fraction of the photons reaching the sensor whose charge is
-        collected, the product of its absorbance and its charge collection
-        efficiency.
+        The electrons the sensor records for each photon reaching it.
+
+        The product of its absorbance, its charge collection efficiency, and
+        its quantum yield. It is not corrected for the quantum yield, so it
+        is counted in electrons per photon rather than as a fraction.
         """
-        return self.absorbance * self.charge_collection
+        return self.absorbance * self.charge_collection * self.quantum_yield
+
+    @property
+    def area_effective_electrons(self) -> na.AbstractScalar:
+        """
+        The area of an ideal instrument which records one electron for every
+        photon reaching it and records as many electrons as this one.
+
+        The effective area times the charge collection efficiency and the
+        quantum yield of the sensor, which is the effective area as the draft
+        of the manuscript defines it, with a quantum efficiency counted in
+        electrons per photon.
+        """
+        result = self.area_effective * self.charge_collection * self.quantum_yield
+        return (result / (u.electron / u.ph)).to(u.mm**2)
 
     @property
     def response(self) -> na.AbstractScalar:

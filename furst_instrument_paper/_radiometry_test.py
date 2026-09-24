@@ -54,6 +54,14 @@ def test_response():
     """
     result = furst_instrument_paper.radiometry()
     assert (result.quantum_yield > 1 * u.electron / u.ph).all()
+
+    # counted in electrons, not corrected for the quantum yield, so it is
+    # larger than the fraction of the photons whose charge is collected
+    quantum_efficiency = result.quantum_efficiency
+    assert na.unit(quantum_efficiency).is_equivalent(u.electron / u.ph)
+    fraction = result.absorbance * result.charge_collection * (u.electron / u.ph)
+    assert (quantum_efficiency > fraction).all()
+
     ratio = result.response / result.area_effective
     ratio = ratio / ratio.max()
     assert (ratio > 0.7).all()

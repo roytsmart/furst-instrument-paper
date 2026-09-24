@@ -128,7 +128,7 @@ def _rows_throughput() -> list[_Row]:
 
     The draft column is Table 4 of the draft of :data:`date_draft`, copied
     as written, with its quantum yield from Table 5. The model column cites
-    the macros defined at the top of the exported section.
+    the macros defined at the top of the exported response section.
     """
     return [
         _Row(
@@ -150,16 +150,6 @@ def _rows_throughput() -> list[_Row]:
             parameter="Filter transmission",
             draft=r"13\%",
             model=r"\TransmissionFilter",
-        ),
-        _Row(
-            parameter="Detector absorbance",
-            draft="not given",
-            model=r"\AbsorbanceSensor",
-        ),
-        _Row(
-            parameter="Charge collection",
-            draft="not given",
-            model=r"\ChargeCollection",
         ),
         _Row(
             parameter="Quantum efficiency",
@@ -192,13 +182,11 @@ def throughput() -> str:
         rf"{date_draft}, beside those of the model, averaged over the",
         r"sampled wavelengths of every channel, except for the effective area",
         r"and the quantum yield, which are given as their range.",
-        r"The effective area of the model includes the absorbance of the",
-        r"detector but not its charge collection efficiency or its quantum",
-        r"yield, which enter the response instead.",
-        r"The quantum efficiency of the model is the product of the",
-        r"absorbance and the charge collection efficiency, the fraction of the",
-        r"charge liberated in the detector which reaches a pixel.",
-        r"The quantum yield of the draft is from its Table~5.",
+        r"As in the draft, the effective area is the product of the five terms",
+        r"above it.",
+        r"The quantum efficiency of the model is counted in electrons per",
+        r"photon, so it includes the quantum yield, which the draft takes to be",
+        r"one in its Table~5.",
         r"}",
         rf"\label{{{label_throughput}}}",
         r"\begin{tabular}{lll}",

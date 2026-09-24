@@ -1,14 +1,18 @@
 import re
 import furst_instrument_paper
-from ._export_figures import figures_latex
+from ._export_figures import figures_latex, figures_performance, figures_response
 from ._tables import design_parameters, throughput
 
 __all__ = [
     "section",
+    "section_response",
 ]
 
 label = "sec:opticalPerformance"
 """The label of the section, for the manuscript to refer to."""
+
+label_response = "sec:response"
+"""The label of the response section, for the manuscript to refer to."""
 
 
 def _prose() -> str:
@@ -94,46 +98,6 @@ It ranges from \ResolvingPowerMin\ to \ResolvingPowerMax\ over the traced
 wavelengths, with a mean of \ResolvingPowerMean, and so exceeds the
 requirement of \ensuremath{2 \times 10^4} throughout the bandpass.
 
-The throughput of the instrument follows from the same model.
-Its effective area, shown in the top panel of Figure~\ref{fig:effectiveArea},
-is the area of the pupil traced from each point of the solar disk, with
-each ray weighted by the efficiency of every surface it meets, averaged
-over the disk.
-It includes the reflectance of the feed optics, measured on witness samples
-coated alongside them; the first-order efficiency of the grating, the
-reflectance Zeiss measured on a test piece coated with it times the
-efficiency Zeiss computed for grooves of the profile it measured on the
-flight grating \citep{Stock2023}, at the angle of incidence of each channel;
-the transmission of the filter, measured on its witness sample; and the
-absorbance of the silicon of the detector.
-Table~\ref{tab:throughput} lists each of these terms beside the estimate in
-the draft.
-The effective area rises steeply across the first channel, from
-\AreaEffectiveMin, as the filter and the detector fall away toward
-Lyman~\ensuremath{\alpha}, and reaches \AreaEffectiveMax\ in the middle of
-the bandpass.
-Dividing the efficiencies back out leaves the area the instrument collects
-from, \AreaCollecting, which is set by the layout alone.
-
-The detector does not count photons but measures the charge they liberate,
-so the bottom panel of Figure~\ref{fig:effectiveArea} gives the response of
-the instrument: the effective area times the charge collection efficiency of
-the detector and its quantum yield, divided by the energy of a photon.
-Multiplied by the irradiance of a spectral line, it gives the rate at which
-the line deposits electrons on the detector.
-The charge collection efficiency hardly varies across the bandpass, averaging
-\ChargeCollection, and the quantum yield falls from \QuantumYieldMax\ to
-\QuantumYieldMin\ electrons per absorbed photon almost in proportion to the
-energy of the photons, so the response has nearly the shape of the
-effective area, from \ResponseMin\ at the short end of the bandpass to
-\ResponseMax.
-It is less certain than the effective area, since the detector is modeled
-rather than measured: the charge collection efficiency is that of a model
-of an e2v CCD97 fit in part to the measurements of \citet{Heymes2020}, not
-of the CCD230-42 which flew, and the quantum yield is the model of
-\citet{Ramanathan2020}, which is fit to measurements only at photon
-energies below 8\,eV, longward of 155\,nm.
-
 Every figure in this section, and every number it takes from the model,
 is computed from the instrument model by
 \href{https://github.com/roytsmart/furst-instrument-paper}{\texttt{furst-instrument-paper}}
@@ -160,9 +124,98 @@ def section() -> str:
         "",
         design_parameters(),
         "",
+        figures_latex(figures_performance()),
+    ]
+    return "\n".join(parts) + "\n"
+
+
+def _prose_response() -> str:
+    """
+    The text of the response section, with every number written as a
+    macro.
+    """
+    return r"""
+\subsection{Response}
+\label{sec:response}
+
+The response of the instrument is the rate at which it records electrons
+for a given irradiance at its entrance.
+We compute it from the same model of the instrument and show it, with each
+of its factors, in Figure~\ref{fig:response}: the efficiency of each optic
+the light meets, and the quantum efficiency of the detector.
+Each is computed one channel at a time, since each channel meets the grating
+at its own angle, and the neighboring channels agree where their bands
+overlap.
+
+The feed optics reflect \ReflectanceFeed\ of the light on average, as
+measured on witness samples coated alongside them.
+The grating sends \EfficiencyGrating\ of it into the first order: the
+reflectance Zeiss measured on a test piece coated with it, times the
+efficiency Zeiss computed for grooves of the profile it measured on the
+flight grating \citep{Stock2023}, at the angle of incidence of each channel.
+The visible-blind filter, as measured on its witness sample, transmits
+\TransmissionFilter\ on average, and less toward Lyman~\ensuremath{\alpha}.
+
+The quantum efficiency of the detector, in electrons per incident photon,
+is the product of three factors: the fraction of the photons absorbed in
+its silicon, \AbsorbanceSensor\ on average; the fraction of the charge they
+liberate which reaches a pixel, its charge collection efficiency,
+\ChargeCollection; and the number of electron-hole pairs each absorbed
+photon liberates, its quantum yield, which falls from \QuantumYieldMax\ to
+\QuantumYieldMin\ across the bandpass.
+We do not correct it for the quantum yield, so it counts electrons rather
+than photons, and it ranges from \QuantumEfficiencyMin\ to
+\QuantumEfficiencyMax.
+It is the least certain of the factors, since the detector is modeled rather
+than measured: the charge collection efficiency is that of a model of an
+e2v CCD97 fit in part to the measurements of \citet{Heymes2020}, not of the
+CCD230-42 which flew, and the quantum yield is the model of
+\citet{Ramanathan2020}, which is fit to measurements only at photon
+energies below 8\,eV, longward of 155\,nm.
+
+The response, in the bottom panel of Figure~\ref{fig:response}, is the
+product of these factors and the area the instrument collects light from,
+divided by the energy of a photon.
+That area, \AreaCollecting, is set by the layout alone, and is small
+because each convex feed optic spreads the light it reflects over a wide
+fan, of which the grating intercepts only a small part.
+Multiplied by the irradiance of a spectral line in
+\ensuremath{\mathrm{erg\,cm^{-2}\,s^{-1}}}, the response gives the
+electrons per second that the line deposits on the detector.
+It rises steeply across the first channel, from \ResponseMin, as the
+transmission of the filter and the absorbance of the detector both fall
+toward Lyman~\ensuremath{\alpha}, and reaches \ResponseMax\ in the middle of
+the bandpass.
+Since the quantum yield falls almost in proportion to the energy of a
+photon, the detector records nearly the same charge for each unit of energy
+it absorbs, and beyond the first channel the response follows the product
+of the efficiencies of the three optics.
+Table~\ref{tab:throughput} sets each of these factors beside the estimates
+in Table~4 of the draft.
+"""
+
+
+def section_response() -> str:
+    """
+    The LaTeX of the response section, ready to be included in the
+    manuscript with ``\\input``.
+
+    Like :func:`section`, the file defines a macro for every number it
+    cites, then gives the text of the section, then the table and the
+    figure it refers to.
+    """
+    variables = [v.dumps() for v in furst_instrument_paper.variables_response()]
+
+    parts = [
+        "% Generated by furst-instrument-paper. Do not edit by hand.",
+        "",
+        "\n".join(variables),
+        "",
+        _prose_response().strip("\n"),
+        "",
         throughput(),
         "",
-        figures_latex(),
+        figures_latex(figures_response()),
     ]
     return "\n".join(parts) + "\n"
 
