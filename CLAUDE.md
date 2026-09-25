@@ -79,9 +79,12 @@ python -c "import furst_instrument_paper; furst_instrument_paper.export('path/to
 compile test actually runs, then builds the preview and publishes it to the
 `gh-pages` branch, served at
 <https://roytsmart.github.io/furst-instrument-paper/optical-performance.pdf>.
+Each pull request from this repository gets its own preview at
+`pr/<number>/optical-performance.pdf`, linked from a comment the workflow
+keeps up to date on the pull request, and removed when it closes.
 
 Publishing a release runs `.github/workflows/overleaf.yml`, which exports the
-sections, attaches them to the release, and pushes it to the Overleaf project
+sections, attaches them to the release, and pushes them to the Overleaf project
 using the `OVERLEAF_TOKEN` and `OVERLEAF_PROJECT_ID` secrets.
 
 Each figure and variable has a test, `_section_test.py` checks that the prose

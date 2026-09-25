@@ -6,11 +6,19 @@ name: pdf
 # can hold it, so this is also where the compile test actually runs: the
 # `tests` workflow has no LaTeX and skips it.
 
+#
+# The preview of `main` is served at the root of the site. Each pull request
+# from this repository gets its own, at `pr/<number>/`, linked from a comment
+# on the pull request and removed when the pull request is closed. Pull
+# requests from forks have no token that can write to the branch, so they
+# only get the preview as a workflow artifact.
+
 on:
   push:
     branches:
       - main
   pull_request:
+    types: [opened, synchronize, reopened, closed]
   workflow_dispatch:
 
 # Every run publishes to the same branch, so serialize them.
@@ -21,9 +29,11 @@ concurrency:
 jobs:
   pdf:
     name: Build and publish the preview
+    if: github.event.action != 'closed'
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pull-requests: write
     steps:
       - name: Install LaTeX and the cairo library
         # `texlive-publishers` carries the class the draft uses, and optika's
@@ -70,11 +80,20 @@ jobs:
           path: preview/optical-performance.pdf
 
       - name: Publish the preview to the gh-pages branch
-        if: github.event_name != 'pull_request'
+        if: >-
+          github.event_name != 'pull_request' ||
+          github.event.pull_request.head.repo.full_name == github.repository
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SHA: ${{ github.sha }}
+          SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          PR: ${{ github.event.pull_request.number }}
         run: |
+          if [ -n "$PR" ]; then
+            destination="pr/${PR}"
+          else
+            destination="."
+          fi
+
           remote="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
           if git clone --depth 1 --branch gh-pages "$remote" pages 2>/dev/null; then
             echo "cloned the existing gh-pages branch"
@@ -88,7 +107,8 @@ jobs:
             cd ..
           fi
 
-          cp preview/optical-performance.pdf pages/
+          mkdir -p "pages/${destination}"
+          cp preview/optical-performance.pdf "pages/${destination}/"
 
           cd pages
           git config user.name "github-actions[bot]"
@@ -97,6 +117,58 @@ jobs:
           if git diff --cached --quiet; then
             echo "The preview is unchanged; nothing to publish."
           else
-            git commit -q -m "Publish the preview for ${SHA:0:7}"
+            git commit -q -m "Publish the preview for ${SHA:0:7}${PR:+ (pull request #${PR})}"
             git push -q origin gh-pages
           fi
+
+      - name: Link the preview from the pull request
+        if: >-
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          # one comment per pull request, found again by this marker and
+          # edited in place on every push
+          marker="<!-- pdf-preview -->"
+          owner="${GITHUB_REPOSITORY%/*}"
+          name="${GITHUB_REPOSITORY#*/}"
+          url="https://${owner}.github.io/${name}/pr/${PR}/optical-performance.pdf"
+          body="${marker}
+          **[Preview of this pull request](${url})**, built from ${SHA:0:7}. Pages can take a minute to update after a push."
+          id=$(gh api "repos/${GITHUB_REPOSITORY}/issues/${PR}/comments" --paginate \
+            --jq ".[] | select(.body | startswith(\"${marker}\")) | .id" | head -n 1)
+          if [ -n "$id" ]; then
+            gh api -X PATCH "repos/${GITHUB_REPOSITORY}/issues/comments/${id}" -f body="$body"
+          else
+            gh api -X POST "repos/${GITHUB_REPOSITORY}/issues/${PR}/comments" -f body="$body"
+          fi
+
+  remove:
+    name: Remove the preview of a closed pull request
+    if: >-
+      github.event.action == 'closed' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Remove the preview from the gh-pages branch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          remote="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git clone --depth 1 --branch gh-pages "$remote" pages
+          cd pages
+          if [ ! -d "pr/${PR}" ]; then
+            echo "No preview to remove."
+            exit 0
+          fi
+          git rm -q -r "pr/${PR}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -q -m "Remove the preview of pull request #${PR}"
+          git push -q origin gh-pages

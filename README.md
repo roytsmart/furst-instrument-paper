@@ -10,7 +10,8 @@ the instrument.
 **[Read the current sections](https://roytsmart.github.io/furst-instrument-paper/optical-performance.pdf)**,
 rebuilt from the model on every push to `main`. It is the exported sections
 inside the smallest manuscript that can hold them, so it shows exactly what
-the corresponding author will get.
+the corresponding author will get. Each pull request gets its own preview,
+linked from a comment on the pull request.
 
 The manuscript itself lives in Overleaf. This package produces the parts of
 it that come from the optical model, subsections 3.3, *Optical Performance*,
