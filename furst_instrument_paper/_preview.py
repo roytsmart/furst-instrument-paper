@@ -20,22 +20,23 @@ document = r"""
 
 \begin{document}
 
-\title{The FURST Optical Performance Section}
+\title{The FURST Optical Performance and Response Sections}
 \author{Roy T. Smart}
 
 \begin{abstract}
 This document is not the FURST instrument paper.
-It is a preview of the one section of it which is generated from the
-instrument model, built so that the section can be read and checked on its
-own before it is delivered to the manuscript.
-The numbered subsections above it are empty placeholders, standing in for
-the sections of the manuscript which precede it.
+It is a preview of the sections of it which are generated from the
+instrument model, built so that they can be read and checked on their own
+before they are delivered to the manuscript.
+The numbered subsections above them are empty placeholders, standing in
+for the sections of the manuscript which precede them.
 \end{abstract}
 
 \section{Instrument Overview}
 \subsection{Design Rationale}
 \subsection{Optical Layout}
 \input{033_instrument_performance.tex}
+\input{034_response.tex}
 
 % The manuscript chooses its own bibliography style. This one is only so
 % that the preview has references at all, and is chosen because it ships

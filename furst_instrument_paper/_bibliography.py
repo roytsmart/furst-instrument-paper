@@ -66,6 +66,41 @@ def software() -> list[_Software]:
     return [optika, furst_optics, furst_instrument_paper]
 
 
+references = (
+    r"""@techreport{Stock2023,
+    author = {{Stock}, Carsten},
+    title = {{FURST FUV Grating: Final Report}},
+    institution = {Carl Zeiss Jena GmbH},
+    year = {2023},
+    month = jul,
+}""",
+    r"""@article{Heymes2020,
+    author = {{Heymes}, Julian and {Soman}, Matthew and {Randall}, George and {Gottwald}, Alexander and {Harris}, Andrew and {Kelt}, Andrew and {Moody}, Ian and {Meng}, Xiao and {Holland}, Andrew D.},
+    title = {{Comparison of Back-Thinned Detector Ultraviolet Quantum Efficiency for Two Commercially Available Passivation Treatments}},
+    journal = {IEEE Transactions on Nuclear Science},
+    year = {2020},
+    volume = {67},
+    number = {8},
+    pages = {1962--1967},
+    doi = {10.1109/TNS.2020.3001622},
+}""",
+    r"""@article{Ramanathan2020,
+    author = {{Ramanathan}, K. and {Kurinsky}, N.},
+    title = {{Ionization yield in silicon for eV-scale electron-recoil processes}},
+    journal = {Phys. Rev. D},
+    year = {2020},
+    volume = {102},
+    number = {6},
+    pages = {063026},
+    doi = {10.1103/PhysRevD.102.063026},
+}""",
+)
+"""
+The literature the section cites, besides software: the final report on the
+flight grating, and the sources of the models of the detector.
+"""
+
+
 def _entry(item: _Software) -> str:
     """
     One BibTeX entry, naming the installed version of the package.
@@ -95,5 +130,5 @@ def bibliography() -> str:
     """
     The BibTeX entries the section cites, for the manuscript's bibliography.
     """
-    entries = [_entry(item) for item in software()]
+    entries = [_entry(item) for item in software()] + list(references)
     return "\n".join(entries) + "\n"

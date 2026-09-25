@@ -38,7 +38,12 @@ seed_pupil = 43
 @functools.cache
 def instrument() -> furst.instruments.Instrument:
     """
-    The final FURST design, sampled for the performance figures.
+    The FURST instrument as it was built and flown, sampled for the
+    performance figures.
+
+    This is :func:`furst.instruments.as_built`: the final design with the
+    flight grating in place, the coatings and the filter as measured on the
+    flight hardware, and the feed optic array moved to focus it.
 
     The solar disk and the pupil are each divided into a grid of cells, and
     one ray is traced through a point drawn uniformly at random inside each
@@ -47,7 +52,7 @@ def instrument() -> furst.instruments.Instrument:
     from channel to channel, and the draws are seeded so that every figure
     is reproducible.
     """
-    result = furst.instruments.design(num_wavelength=num_wavelength)
+    result = furst.instruments.as_built(num_wavelength=num_wavelength)
 
     # the bounds of the sample carry the channel axis, so that each channel
     # is drawn separately instead of every channel sharing one draw
