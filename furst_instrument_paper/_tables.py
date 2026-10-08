@@ -3,13 +3,17 @@ import furst_instrument_paper
 
 __all__ = [
     "design_parameters",
+    "throughput",
 ]
 
 label = "tab:designParameters"
 """The label of the table, for the prose to refer to."""
 
+label_throughput = "tab:throughput"
+"""The label of the table of the terms of the effective area."""
+
 date_draft = "September 18, 2026"
-"""The date of the draft whose Table 3 is transcribed here."""
+"""The date of the draft whose Tables 3 and 4 are transcribed here."""
 
 
 @dataclasses.dataclass(frozen=True)
@@ -20,7 +24,7 @@ class _Row:
     """The name of the parameter."""
 
     draft: str
-    """The value in Table 3 of the draft, transcribed as written."""
+    """The value in the draft, transcribed as written."""
 
     model: str
     """The value from the model, written with the macros of the section."""
@@ -81,12 +85,11 @@ def _rows() -> list[_Row]:
             parameter="Radius of grating",
             draft=r"1359\,mm",
             model=r"\GratingRadius",
-            differs=True,
         ),
         _Row(
             parameter="UV section of grating",
             draft=r"200\,mm $\times$ 30\,mm",
-            model=r"\GratingWidthClear\ $\times$ \GratingHeightClear\ (clear aperture)",
+            model=r"\GratingWidthClear\ $\times$ \GratingHeightClear\ (ruled area)",
             differs=True,
         ),
         _Row(
@@ -119,6 +122,88 @@ def _rows() -> list[_Row]:
     ]
 
 
+def _rows_throughput() -> list[_Row]:
+    """
+    The rows of the table of the terms of the effective area.
+
+    The draft column is Table 4 of the draft of :data:`date_draft`, copied
+    as written, with its quantum yield from Table 5. The model column cites
+    the macros defined at the top of the exported response section.
+    """
+    return [
+        _Row(
+            parameter="Geometric area",
+            draft=r"3.072\,mm$^2$",
+            model=r"\AreaCollecting",
+        ),
+        _Row(
+            parameter="Mirror reflectivity",
+            draft=r"85\%",
+            model=r"\ReflectanceFeed",
+        ),
+        _Row(
+            parameter="Grating efficiency",
+            draft=r"30\%",
+            model=r"\EfficiencyGrating",
+        ),
+        _Row(
+            parameter="Filter transmission",
+            draft=r"13\%",
+            model=r"\TransmissionFilter",
+        ),
+        _Row(
+            parameter="Quantum efficiency",
+            draft=r"20\%",
+            model=r"\QuantumEfficiency",
+        ),
+        _Row(
+            parameter="Effective area",
+            draft=r"0.0204\,mm$^2$",
+            model=r"\AreaEffectiveMin\ to \AreaEffectiveMax",
+        ),
+        _Row(
+            parameter="Quantum yield",
+            draft="1",
+            model=r"\QuantumYieldMin\ to \QuantumYieldMax",
+        ),
+    ]
+
+
+def throughput() -> str:
+    """
+    The LaTeX of a table comparing the terms of the effective area in the
+    draft with those of the model.
+    """
+    lines = [
+        r"\begin{table}[!ht]",
+        r"\centering",
+        r"\caption{",
+        r"Terms of the effective area in Table~4 of the draft of",
+        rf"{date_draft}, beside those of the model, averaged over the",
+        r"sampled wavelengths of every channel, except for the effective area",
+        r"and the quantum yield, which are given as their range.",
+        r"As in the draft, the effective area is the product of the five terms",
+        r"above it.",
+        r"The quantum efficiency of the model is counted in electrons per",
+        r"photon, so it includes the quantum yield, which the draft takes to be",
+        r"one in its Table~5.",
+        r"}",
+        rf"\label{{{label_throughput}}}",
+        r"\begin{tabular}{lll}",
+        r"\hline",
+        r"Term & Draft & Model \\",
+        r"\hline",
+    ]
+    for row in _rows_throughput():
+        lines.append(" & ".join([row.parameter, row.draft, row.model]) + r" \\")
+    lines += [
+        r"\hline",
+        r"\end{tabular}",
+        r"\end{table}",
+    ]
+    return "\n".join(lines)
+
+
 def _cell(text: str, bold: bool) -> str:
     """A cell of the table, set in bold if it is one of the disagreements."""
     return rf"\textbf{{{text}}}" if bold else text
@@ -138,6 +223,8 @@ def design_parameters() -> str:
         r"\caption{",
         r"Optical design parameters of the instrument model used in this section,",
         rf"beside the values in Table~3 of the draft of {date_draft}.",
+        r"The grating of the model is the flight grating, whose ruled area and",
+        r"ruling density are as Zeiss measured them \citep{Stock2023}.",
         r"Entries in bold differ between the two and need to be reconciled",
         r"before submission.",
         r"}",

@@ -1,3 +1,4 @@
+import re
 import pathlib
 import pytest
 import matplotlib
@@ -5,7 +6,7 @@ import matplotlib
 matplotlib.use("agg")
 
 import furst_instrument_paper
-from furst_instrument_paper import _export, _preview
+from furst_instrument_paper import _bibliography, _export, _preview
 
 
 def test_export(tmp_path: pathlib.Path):
@@ -13,20 +14,35 @@ def test_export(tmp_path: pathlib.Path):
 
     assert all(path.exists() for path in result)
     assert (tmp_path / _export.filename_section).exists()
+    assert (tmp_path / _export.filename_section_response).exists()
     assert (tmp_path / _export.filename_bibliography).exists()
     assert (tmp_path / "figures" / "layout.pdf").exists()
     assert (tmp_path / "figures" / "lsf.pdf").exists()
     assert (tmp_path / "figures" / "resolvingPower.pdf").exists()
+    assert (tmp_path / "figures" / "response.pdf").exists()
 
-    latex = (tmp_path / _export.filename_section).read_text(encoding="utf-8")
-    assert r"\subsection{Optical Performance}" in latex
-    assert r"\newcommand{\ResolvingPowerMin}" in latex
-    assert "figures/layout.pdf" in latex
-    assert r"\label{tab:designParameters}" in latex
-    assert r"\label{fig:layout}" in latex
-    assert r"\label{fig:lsf}" in latex
-    assert r"\label{fig:resolvingPower}" in latex
-    assert r"\citep{optika}" in latex
+    latex_performance = (tmp_path / _export.filename_section).read_text(
+        encoding="utf-8"
+    )
+    assert r"\subsection{Optical Performance}" in latex_performance
+    assert r"\newcommand{\ResolvingPowerMin}" in latex_performance
+    assert "figures/layout.pdf" in latex_performance
+    assert r"\label{tab:designParameters}" in latex_performance
+    assert r"\label{fig:layout}" in latex_performance
+    assert r"\label{fig:lsf}" in latex_performance
+    assert r"\label{fig:resolvingPower}" in latex_performance
+    assert r"\citep{optika}" in latex_performance
+
+    latex_response = (tmp_path / _export.filename_section_response).read_text(
+        encoding="utf-8"
+    )
+    assert r"\subsection{Response}" in latex_response
+    assert r"\newcommand{\ResponseMax}" in latex_response
+    assert "figures/response.pdf" in latex_response
+    assert r"\label{tab:throughput}" in latex_response
+    assert r"\label{fig:response}" in latex_response
+
+    latex = latex_performance + latex_response
 
     # every package the prose cites has an entry, and every entry is cited
     bib = (tmp_path / _export.filename_bibliography).read_text(encoding="utf-8")
@@ -35,8 +51,15 @@ def test_export(tmp_path: pathlib.Path):
         assert item.key in latex
         assert item.url in latex
 
+    # and so has every other reference, each of which is cited
+    for entry in _bibliography.references:
+        key = re.match(r"@\w+\{(\w+),", entry).group(1)
+        assert key in bib
+        assert key in latex
+
     # a citation without a year is typeset as "????"
-    assert bib.count("year = {") == len(furst_instrument_paper.software())
+    num_entries = len(furst_instrument_paper.software()) + len(_bibliography.references)
+    assert bib.count("year = {") == num_entries
 
 
 @pytest.mark.skipif(
