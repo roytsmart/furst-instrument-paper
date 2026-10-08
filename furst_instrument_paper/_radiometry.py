@@ -15,16 +15,34 @@ __all__ = [
 num_wavelength = 21
 """The number of wavelengths sampled across each channel."""
 
+num_wavelength_trace = 3
+"""
+The number of wavelengths traced at once.
+
+The rays of every wavelength at once would take some 23 GiB, more than a
+runner of the continuous integration has, while three at a time take
+under 4 GiB.
+"""
+
 num_field = 21
-"""The number of points along each axis of the solar disk averaged over."""
+"""
+The number of vertices along each axis of the grid of cells on the solar
+disk, with one point drawn inside each cell.
+"""
 
 num_pupil = 21
-"""The number of points along each axis of the pupil traced from each point of the disk."""
+"""
+The number of vertices along each axis of the grid of cells on the pupil,
+with one ray traced through a point drawn inside each cell from each point
+of the disk.
+"""
 
 seed = 0
 """
 The seed of the random positions drawn inside each cell of the solar disk
-and of the pupil.
+and of the pupil, for the first wavelengths traced.
+Each later batch of wavelengths adds the index of its first wavelength to
+it, so that every batch is drawn independently.
 
 The positions are drawn afresh at every wavelength, so the sampling error
 of the effective area scatters from one wavelength to the next, and the
@@ -162,40 +180,52 @@ def radiometry() -> Radiometry:
     of, following the design report of :mod:`furst`.
 
     The effective area comes from tracing a grid of rays across the pupil
-    from each point of a grid on the solar disk. The terms are the
-    efficiencies of the surfaces at the angles they are used at: near
-    normal incidence for the feed optics, the filter, and the sensor, and
-    at the angle of incidence of each channel for the grating.
+    from each point of a grid on the solar disk, a few wavelengths at a
+    time. The terms are the efficiencies of the surfaces at the angles they
+    are used at: near normal incidence for the feed optics, the filter, and
+    the sensor, and at the angle of incidence of each channel for the
+    grating.
     """
     instrument = furst_instrument_paper.instrument()
-    instrument = dataclasses.replace(
-        instrument,
-        wavelength=na.linspace(
-            start=instrument.wavelength.min(),
-            stop=instrument.wavelength.max(),
-            axis=axis_wavelength,
-            num=num_wavelength,
-        ),
+    wavelength = na.linspace(
+        start=instrument.wavelength.min(),
+        stop=instrument.wavelength.max(),
+        axis=axis_wavelength,
+        num=num_wavelength,
     )
-    system = instrument.system
 
-    model = system.area_effective(
-        field=na.Cartesian2dVectorLinearSpace(
-            start=-1,
-            stop=1,
-            axis=na.Cartesian2dVectorArray(*axis_field),
-            num=num_field,
-        ),
-        pupil=na.Cartesian2dVectorLinearSpace(
-            start=-1,
-            stop=1,
-            axis=na.Cartesian2dVectorArray(*axis_pupil),
-            num=num_pupil,
-        ),
-        seed_field=seed,
-        seed_pupil=seed,
+    field = na.Cartesian2dVectorLinearSpace(
+        start=-1,
+        stop=1,
+        axis=na.Cartesian2dVectorArray(*axis_field),
+        num=num_field,
     )
-    wavelength = model.wavelength.to(u.nm)
+    pupil = na.Cartesian2dVectorLinearSpace(
+        start=-1,
+        stop=1,
+        axis=na.Cartesian2dVectorArray(*axis_pupil),
+        num=num_pupil,
+    )
+
+    # the wavelengths of the instrument are normalized to the band of each
+    # channel, and only its system knows the band, so each batch is traced
+    # through a system of its own rather than handed to one system as
+    # physical wavelengths
+    models = []
+    for i in range(0, num_wavelength, num_wavelength_trace):
+        index = {axis_wavelength: slice(i, i + num_wavelength_trace)}
+        system = dataclasses.replace(instrument, wavelength=wavelength[index]).system
+        model = system.area_effective(
+            field=field,
+            pupil=pupil,
+            seed_field=seed + i,
+            seed_pupil=seed + i,
+        )
+        models.append(model)
+
+    wavelength = na.concatenate([m.wavelength for m in models], axis=axis_wavelength)
+    wavelength = wavelength.to(u.nm)
+    area_effective = na.concatenate([m.area for m in models], axis=axis_wavelength)
 
     normal = na.Cartesian3dVectorArray(0, 0, -1)
     rays = _rays(wavelength)
@@ -207,7 +237,7 @@ def radiometry() -> Radiometry:
         rays_grating, normal
     )
 
-    sensor = system.sensor.material
+    sensor = instrument.camera.surface.material
 
     # the table behind the quantum yield has no pairs at the band gap of
     # silicon, 1.1 eV, and dividing by them there warns, harmlessly at the
@@ -217,7 +247,7 @@ def radiometry() -> Radiometry:
 
     return Radiometry(
         wavelength=wavelength,
-        area_effective=model.area.to(u.mm**2),
+        area_effective=area_effective.to(u.mm**2),
         reflectance_feed=instrument.feed_optic.material.efficiency(rays, normal),
         efficiency_grating=efficiency_grating,
         transmission_filter=instrument.filter.material.efficiency(rays, normal),
