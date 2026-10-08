@@ -22,7 +22,10 @@ num_pupil = 11
 """The number of points along each axis of the pupil traced from each point of the disk."""
 
 seed = 0
-"""The seed of the random positions drawn inside each cell of the pupil."""
+"""
+The seed of the random positions drawn inside each cell of the solar disk
+and of the pupil.
+"""
 
 unit_response = u.electron * u.cm**2 / u.erg
 """The unit of the response, which multiplies a line irradiance in erg per square centimeter per second."""
@@ -184,7 +187,8 @@ def radiometry() -> Radiometry:
             axis=na.Cartesian2dVectorArray(*axis_pupil),
             num=num_pupil,
         ),
-        seed=seed,
+        seed_field=seed,
+        seed_pupil=seed,
     )
     wavelength = model.wavelength.to(u.nm)
 

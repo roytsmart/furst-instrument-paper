@@ -42,8 +42,9 @@ def test_area_collecting():
     same few square millimeters, which is a check on the whole chain.
     """
     area = furst_instrument_paper.radiometry().area_collecting
-    assert (area > 2.5 * u.mm**2).all()
-    assert (area < 4 * u.mm**2).all()
+    assert (area > 3 * u.mm**2).all()
+    assert (area < 5 * u.mm**2).all()
+    assert area.max() / area.min() < 1.05
 
 
 def test_response():

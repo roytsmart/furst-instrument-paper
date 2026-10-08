@@ -15,7 +15,7 @@ jobs:
         os: [
           ubuntu-latest,
         ]
-        python-version: ["3.11", "3.13"]
+        python-version: ["3.12", "3.13"]
     name: ${{ matrix.os }}, Python ${{ matrix.python-version }} test
     steps:
       - name: Install the cairo library

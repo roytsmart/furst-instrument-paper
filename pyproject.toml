@@ -9,7 +9,7 @@ authors = [
 ]
 description = "Figures and numbers for the FURST instrument paper, generated from the furst-optics model."
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 classifiers = [
     "Programming Language :: Python :: 3",
 ]
@@ -19,8 +19,8 @@ dependencies = [
     "num2words~=0.5",
     "matplotlib",
     "named-arrays",
-    "optika~=2.11",
-    "furst-optics~=0.2.0",
+    "optika~=3.0",
+    "furst-optics~=0.3.0",
 ]
 dynamic = ["version"]
 
