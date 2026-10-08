@@ -40,11 +40,15 @@ def test_area_collecting():
     """
     With the efficiencies divided back out, every channel collects from the
     same few square millimeters, which is a check on the whole chain.
+
+    Its flatness is also a check on the sampling, since the disk and the
+    pupil are drawn afresh at every wavelength, and too few rays would show
+    up as scatter from one wavelength to the next.
     """
     area = furst_instrument_paper.radiometry().area_collecting
     assert (area > 3 * u.mm**2).all()
     assert (area < 5 * u.mm**2).all()
-    assert area.max() / area.min() < 1.05
+    assert area.max() / area.min() < 1.02
 
 
 def test_response():
