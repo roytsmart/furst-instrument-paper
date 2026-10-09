@@ -200,6 +200,9 @@ def _annotate(
     topmost of them, below the grating and the detector, whose beams arrive
     from above, and above the filter, whose beams pass through it below
     its top.
+    The detector label is wider than the space between the filter and the
+    detector, so rather than centered under the detector, it starts just
+    past the filter, where it cannot be read as naming the filter.
     """
     feed = _bounds(instrument.feed_optic)
     grating = _bounds(instrument.grating)
@@ -234,9 +237,9 @@ def _annotate(
         ),
         (
             "detector",
-            (sensor.z_min + sensor.z_max) / 2,
+            window.z_max + _gap,
             sensor.x_min - _gap,
-            dict(ha="center", va="top"),
+            dict(ha="left", va="top"),
         ),
         (
             "Rowland circle",
