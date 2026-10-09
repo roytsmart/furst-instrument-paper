@@ -179,7 +179,8 @@ Sunlight enters from the left and is reflected by one of seven convex
 cylindrical feed optics, each of which forms a virtual image of the Sun on
 the Rowland circle (dashed), narrower than a pixel of the detector.
 The concave diffraction grating, at the far side of the circle, disperses
-the light and focuses it back onto the circle at the detector.
+the light and focuses it back onto the circle at the detector, through a
+visible-blind filter just in front of it.
 Each feed optic illuminates the grating at a different angle of incidence,
 so each channel places a different band of the spectrum on the detector.
 Three wavelengths are traced through each channel."""))
@@ -196,18 +197,21 @@ def _annotate(
 
     Every label sits just outside the outline of its part, on the side away
     from the light: above the feed optics, whose incoming beam is below the
-    topmost of them, and below the grating and the detector, whose beams
-    arrive from above.
+    topmost of them, below the grating and the detector, whose beams arrive
+    from above, and above the filter, whose beams pass through it below
+    its top.
     """
     feed = _bounds(instrument.feed_optic)
     grating = _bounds(instrument.grating)
+    window = _bounds(instrument.filter)
     sensor = _bounds(instrument.camera.sensor)
 
-    # the Rowland circle is labelled on its arc between the detector and the
-    # feed optics, where nothing else is drawn
+    # the Rowland circle is labelled on its arc on the side of the grating,
+    # halfway between the topmost feed optic and the top of the drawing,
+    # above the incoming sunlight, where nothing else is drawn
     radius_rowland = _millimeters(instrument.grating.rowland_radius)
-    x_circle = (feed.x_min + sensor.x_max) / 2
-    z_circle = np.sqrt(np.square(radius_rowland) - np.square(x_circle))
+    x_circle = feed.x_max + _millimeters(_margin) / 2
+    z_circle = -np.sqrt(np.square(radius_rowland) - np.square(x_circle))
 
     labels = [
         (
@@ -223,6 +227,12 @@ def _annotate(
             dict(ha="center", va="top"),
         ),
         (
+            "filter",
+            (window.z_min + window.z_max) / 2,
+            window.x_max + _gap,
+            dict(ha="center", va="bottom"),
+        ),
+        (
             "detector",
             (sensor.z_min + sensor.z_max) / 2,
             sensor.x_min - _gap,
@@ -230,9 +240,9 @@ def _annotate(
         ),
         (
             "Rowland circle",
-            z_circle - _gap,
+            z_circle + _gap,
             x_circle,
-            dict(ha="right", va="center", color="gray"),
+            dict(ha="left", va="center", color="gray"),
         ),
     ]
 
